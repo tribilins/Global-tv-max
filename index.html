@@ -575,18 +575,43 @@ function vLive(){
    ${channelBrowser(allChannels(),'live')}
    <p class="note">Canales gratuitos que las televisoras transmiten por internet. Los de TV de paga se filtran automáticamente. Si un canal no abre, puede estar fuera del aire o limitado a su país de origen.</p>`;
 }
+const MOVIE_SHELVES=[
+  ['mexicano','Cine mexicano',/a la mexicana|nuestro cine|az cinema|cine hispano|movie network \(mexico\)|cine en espa|latina clasicos|popcorn central|cine mexicano|tvoro|cine de oro|ranchero|charro/i,c=>c.country==='MX'&&c.cat==='peliculas'],
+  ['latino','Cine latino y en español',/cine|pel[ií]cula|maxcine|xtrema|runtime espa|mega cine|aurora media|retro plus|pantalla clasica|cosmos tv|boreal|sensacine|persiana latino|mega extreno|adrenalina pura|aneflix/i,c=>c.cat==='peliculas'&&(c.country==='LATAM'||c.country==='MX'||/latam|espa/i.test(c.name))],
+  ['comedia','Comedia',/comedia|comedy|humor|risa|semanita|south park|afv|daria|humor mill/i,null],
+  ['accion','Acción y suspenso',/acci[oó]n|action|adrenalina|crimen|crime|suspenso|thriller|estrellas de accion|catastrofes/i,null],
+  ['terror','Terror',/terror|horror|psycho|zombies|miedo|invasion alien/i,null],
+  ['clasicos','Clásicos y western',/cl[aá]sic|classic|retro|nostalgia|western|70s|80s|cinevault|tvs drive|\btv ?oro\b/i,null,c=>c.cat==='peliculas'||/cine|movie|western/i.test(c.name)],
+  ['romance','Romance y drama',/roman|amor|drama|inspirador/i,null],
+  ['familia','Familia e infantil',/famil|kids|infantil|cine familiar/i,null],
+  ['ingles','Cine en inglés',/movie|cinema|films?\b|movies!/i,c=>c.cat==='peliculas',c=>c.country==='US'&&!/latam|espa|mexic/i.test(c.name)]
+];
+const SERIES_SHELVES=[
+  ['novelasmx','Telenovelas mexicanas',/novelas de m[eé]xico|telenovelas cl[aá]sicas|todo novelas/i,null],
+  ['novelas','Novelas',/novela/i,null],
+  ['seriescom','Series de comedia',/series de comedia|sitcom|comedy|comedia|humor|south park|daria|semanita/i,null,c=>!/cine comedia|comedy movies|maxcine/i.test(c.name)],
+  ['seriesacc','Series de acción y crimen',/series de acci|crimen|crime|csi|macgyver|investig/i,null,c=>c.cat!=='peliculas'],
+  ['retro','Series retro',/retro|cl[aá]sic|nostalgia|80s|90s/i,null,c=>c.cat==='series'||c.cat==='entretenimiento'],
+  ['scifi','Ciencia ficción',/sci-?fi|star trek|ciencia ficci/i,null]
+];
+const shelfCats=new Set(['peliculas','entretenimiento','series','infantil','otros','abierta']);
+function shelfChannels(shelf){const [, ,re,extra,req]=shelf;return sortCh(allChannels().filter(c=>shelfCats.has(c.cat)&&(re.test(c.name)||(extra&&extra(c)))&&(!req||req(c))))
+  .sort((a,b)=>(/^(MX|LATAM|EU)$/.test(a.country)||/latam|espa/i.test(a.name)?0:1)-(/^(MX|LATAM|EU)$/.test(b.country)||/latam|espa/i.test(b.name)?0:1))}
+function shelvesHtml(list){
+  const filled=list.map(sh=>[sh,shelfChannels(sh)]).filter(([,l])=>l.length);
+  if(!filled.length)return LISTS_LOADING?'<div class="empty">Cargando canales de cine…</div>':'';
+  return `<div class="chips">${filled.map(([sh,l])=>`<button class="chip" data-act="jump" data-k="sh-${sh[0]}">${sh[1]} · ${l.length}</button>`).join('')}</div>`+
+    filled.map(([sh,l])=>`<section id="sh-${sh[0]}" style="scroll-margin-top:80px">${`<div class="sec-head"><h2>${sh[1]} <span class="mute mono" style="font-size:.85rem;font-weight:500">${l.length}</span></h2>${l.length>12?`<button class="btn sm" data-act="shelfAll" data-k="${sh[0]}">Ver los ${l.length}</button>`:''}</div>`}<div class="rail wide">${l.slice(0,ST.shelfOpen===sh[0]?200:12).map(channelTile).join('')}</div></section>`).join('');
+}
 function freePlatformChannels(){return sortCh(allChannels().filter(c=>FREE_PLATFORM.test(c.name)))}
 function vCatalog(type){
   let list=DB.titles.filter(t=>t.type===type&&ratingOK(t.rating));
   const genres=[...new Set(list.flatMap(t=>t.genres))].sort();
   if(ST.movieGenre!=='all')list=list.filter(t=>t.genres.includes(ST.movieGenre));
-  const chCat=type==='movie'?'peliculas':'series';
-  const live=sortCh(allChannels().filter(c=>c.cat===chCat)).sort((a,b)=>(/^(MX|LATAM|EU)$/.test(a.country)?0:1)-(/^(MX|LATAM|EU)$/.test(b.country)?0:1));
-  const plat=freePlatformChannels().filter(c=>c.cat===chCat||c.cat==='entretenimiento');
-  return `<div><div class="eyebrow">Catálogo</div><h1 style="font-size:1.9rem">${type==='movie'?'Películas':'Series'}</h1></div>
-   ${live.length?section(type==='movie'?'Canales de cine 24/7':'Canales de series y novelas 24/7',`<div class="rail wide">${live.slice(0,16).map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="br" data-key="live" data-f="Go" data-k="ALL|${chCat}">Ver los ${live.length}</button>`):''}
-   ${plat.length?section('De plataformas gratuitas (Pluto TV, ViX y más)',`<div class="rail wide">${plat.slice(0,16).map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="go" data-v="providers">Ver todos</button>`):''}
-   ${section(type==='movie'?'Películas completas gratis':'Series completas gratis',`<div class="chips" style="margin-bottom:12px"><button class="chip" data-act="genre" data-k="all" aria-pressed="${ST.movieGenre==='all'}">Todos</button>${genres.map(g=>`<button class="chip" data-act="genre" data-k="${esc(g)}" aria-pressed="${ST.movieGenre===g}">${esc(g)}</button>`).join('')}</div>
+  return `<div><div class="eyebrow">Canales de cine en vivo, gratis las 24 horas</div><h1 style="font-size:1.9rem">${type==='movie'?'Películas':'Series y novelas'}</h1></div>
+   ${shelvesHtml(type==='movie'?MOVIE_SHELVES:SERIES_SHELVES)}
+   ${section(type==='movie'?'Películas a la carta, gratis':'Series a la carta, gratis',`<div class="grid ch">${[['ViX','https://vix.com','Cine mexicano y latino gratis con anuncios'],['Pluto TV','https://pluto.tv','Películas a la carta gratis con anuncios'],['Tubi','https://tubitv.com','Miles de películas gratis con anuncios']].map(([n,u,d])=>`<div class="ch-tile" style="grid-template-columns:auto 1fr auto"><div class="ch-logo" style="background:${chColor(n)}">${esc(initials(n))}</div><div class="info"><strong>${n}</strong><div class="now">${d}</div></div><a class="btn sm" href="${u}" target="_blank" rel="noopener">Abrir ${ic('ext')}</a></div>`).join('')}</div>`)}
+   ${section('Animación libre a la carta (Creative Commons)',`<div class="chips" style="margin-bottom:12px"><button class="chip" data-act="genre" data-k="all" aria-pressed="${ST.movieGenre==='all'}">Todos</button>${genres.map(g=>`<button class="chip" data-act="genre" data-k="${esc(g)}" aria-pressed="${ST.movieGenre===g}">${esc(g)}</button>`).join('')}</div>
    ${list.length?`<div class="grid">${list.map(posterCard).join('')}</div>`:'<div class="empty">No hay títulos con este filtro.</div>'}`)}`;
 }
 function vProviders(){
@@ -1051,6 +1076,8 @@ document.addEventListener('click',async e=>{
     case 'go':go(el.dataset.v);break;
     case 'closeModal':closeModal();break;
     case 'closePlayer':closePlayer();break;
+    case 'jump':document.getElementById(k)?.scrollIntoView({behavior:'smooth',block:'start'});break;
+    case 'shelfAll':ST.shelfOpen=ST.shelfOpen===k?null:k;renderView();setTimeout(()=>document.getElementById('sh-'+k)?.scrollIntoView({block:'start'}),30);break;
     case 'pFull':pFull();break;
     case 'pCastMenu':castMenu();break;
     case 'pAirplay':pAirplay();break;
