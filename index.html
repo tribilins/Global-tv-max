@@ -152,7 +152,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .checks{display:flex;flex-wrap:wrap;gap:8px}
 .checks label{display:flex;gap:6px;align-items:center;background:var(--ink);border:1px solid var(--line);padding:6px 10px;border-radius:8px;font-size:.85rem}
-.err{color:var(--live);font-size:.88rem;min-height:1.2em}
+.err{color:var(--fg);font-size:.88rem;min-height:0}
+.err:not(:empty){background:color-mix(in srgb,var(--gold) 12%,var(--panel));border-left:3px solid var(--gold);padding:10px 12px;border-radius:0 10px 10px 0}
 .secret{display:flex;gap:8px;align-items:center;background:var(--ink);border:1px dashed var(--gold);border-radius:10px;padding:10px 12px;font-family:var(--f-mono);word-break:break-all}
 
 /* Modal */
@@ -612,7 +613,7 @@ function m3uModal(){
   openModal(`${mHead('Agregar lista M3U','Modo reproductor')}
    <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="eyebrow">Carga rápida · canales gratuitos públicos</div>
     <div class="row-btns">${PUBLIC_LISTS.map(p=>`<button class="btn sm" data-act="m3uPreset" data-k="${p.id}">${esc(p.name)}</button>`).join('')}</div>
-    <small class="mute">Índice comunitario iptv-org (GitHub) de transmisiones gratuitas que los propios canales publican. Algunos enlaces pueden estar caídos; la app marca su estado al reproducirlos.</small><div class="err" id="m3u-perr"></div></div>
+    <small class="mute">Canales gratuitos que las propias televisoras transmiten en internet (índice iptv-org). Si alguno no abre, la app lo marca como caído.</small><div class="err" id="m3u-perr"></div></div>
    <form data-form="m3u" class="form-grid" style="grid-template-columns:1fr">
     <div class="field"><label for="m3u-name">Nombre de la lista</label><input id="m3u-name" type="text" required maxlength="60" placeholder="Ej. Mi proveedor de TV"></div>
     <div class="field"><label for="m3u-url">Enlace de la lista (http/https)</label><input id="m3u-url" type="url" placeholder="https://…/lista.m3u"></div>
@@ -624,18 +625,32 @@ function m3uModal(){
    </form>`);
 }
 const PUBLIC_LISTS=[
-  {id:'mx',name:'México (gratuitos)',url:'https://iptv-org.github.io/iptv/countries/mx.m3u'},
-  {id:'us',name:'Estados Unidos (gratuitos)',url:'https://iptv-org.github.io/iptv/countries/us.m3u'},
-  {id:'spa',name:'Canales en español',url:'https://iptv-org.github.io/iptv/languages/spa.m3u'}
+  {id:'mx',name:'México (gratuitos)',url:'listas/mx.m3u',remote:'https://iptv-org.github.io/iptv/countries/mx.m3u'},
+  {id:'us',name:'Estados Unidos (gratuitos)',url:'listas/us.m3u',remote:'https://iptv-org.github.io/iptv/countries/us.m3u'},
+  {id:'spa',name:'Canales en español',url:'listas/spa.m3u',remote:'https://iptv-org.github.io/iptv/languages/spa.m3u'}
 ];
+async function autoLoadLists(){
+  if(!ME||IN_PREVIEW||(ME.m3u&&ME.m3u.length)||ME.autoLoaded)return;
+  ME.autoLoaded=true;save();
+  for(const p of PUBLIC_LISTS.filter(x=>x.id==='mx'||x.id==='spa')){
+    try{const chans=onlyCompatible(parseM3U(await fetchPreset(p)));if(!chans.length)continue;ME.m3u=ME.m3u||[];
+      ME.m3u.push({id:uid(),name:p.name+' · iptv-org',url:p.url,source:'iptv-org (índice público)',updated:Date.now(),channels:chans.slice(0,5000)})}catch(e){}
+  }
+  save();if(ME.m3u.length){toast('Listas de canales cargadas');if(VIEW==='m3u'||VIEW==='home')renderView()}
+}
+async function fetchPreset(p){try{return await fetchText(p.url)}catch(e){return await fetchText(p.remote)}}
+function m3uFailMsg(url,e){
+  if(location.protocol==='https:'&&/^http:\/\//i.test(url))return 'Este enlace usa http (sin candado de seguridad). Safari y Chrome no permiten abrir enlaces http dentro de una app segura https, y la app no puede saltarse esa regla. Pide a tu proveedor el enlace que empieza con https://, o descarga el archivo .m3u y súbelo aquí.';
+  return 'No se pudo descargar la lista desde ese enlace. Revisa que esté bien escrito, o descarga el archivo .m3u y súbelo aquí, o pega su contenido.';
+}
 const IN_PREVIEW=/claude\.ai|claudeusercontent|anthropic/.test(location.hostname)||/claude\.ai/.test(document.referrer);
 const onlyCompatible=list=>location.protocol==='https:'?list.filter(c=>/^https:/i.test(c.url)):list;
 async function loadPreset(id){
   const p=PUBLIC_LISTS.find(x=>x.id===id);const e0=$('#m3u-perr');const err={set textContent(t){e0?e0.textContent=t:toast(t)}};err.textContent='Descargando '+p.name+'…';
-  try{let chans=parseM3U(await fetchText(p.url));const before=chans.length;chans=onlyCompatible(chans);const skipped=before-chans.length;if(skipped)toast(`${skipped} canales con enlace http se omitieron porque el navegador los bloquea en sitios https.`);ME.m3u=ME.m3u||[];ME.m3u=ME.m3u.filter(l=>l.url!==p.url);
+  try{let chans=parseM3U(await fetchPreset(p));const before=chans.length;chans=onlyCompatible(chans);const skipped=before-chans.length;ME.m3u=ME.m3u||[];ME.m3u=ME.m3u.filter(l=>l.url!==p.url);
     ME.m3u.push({id:uid(),name:p.name+' · iptv-org',url:p.url,source:'iptv-org (índice público)',updated:Date.now(),channels:chans.slice(0,5000)});
     audit(ME.username,'lista_m3u_agregada',p.name,`${chans.length} canales`);save();closeModal();ST.m3uGroup='all';renderView();toast(`${p.name}: ${chans.length} canales cargados`)}
-  catch(e){err.textContent='No se pudo descargar ('+e.message+'). Dentro de la vista previa de Claude las descargas externas están bloqueadas; funciona al abrir la app desde tu sitio publicado (GitHub Pages).'}
+  catch(e){err.textContent='No se pudo cargar la lista. Revisa tu conexión a internet e intenta de nuevo.'}
 }
 async function fetchText(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('El servidor respondió '+r.status);return r.text()}
 async function submitM3U(){
@@ -644,7 +659,7 @@ async function submitM3U(){
     const name=$('#m3u-name').value.trim(),url=$('#m3u-url').value.trim(),file=$('#m3u-file').files[0],txt=$('#m3u-text').value.trim();
     let text='',source='';
     if(txt){text=txt;source='Texto pegado'}else if(file){if(file.size>15e6)throw new Error('El archivo pesa más de 15 MB.');text=await file.text();source='Archivo: '+file.name}
-    else if(url){try{text=await fetchText(url)}catch(e){throw new Error('No se pudo descargar la lista ('+e.message+'). Algunos servidores bloquean la descarga desde el navegador o la vista previa; súbela como archivo o pega su contenido.')}source=new URL(url).host}
+    else if(url){if(!/^https?:\/\//i.test(url))throw new Error('El enlace debe empezar con https://');if(location.protocol==='https:'&&/^http:\/\//i.test(url))throw new Error(m3uFailMsg(url));try{text=await fetchText(url)}catch(e){throw new Error(m3uFailMsg(url,e))}source=new URL(url).host}
     else throw new Error('Agrega un enlace, un archivo o pega el contenido de la lista.');
     const all=parseM3U(text);const chans=onlyCompatible(all);if(all.length&&!chans.length)throw new Error('Todos los canales de la lista usan enlaces http, que el navegador bloquea en sitios https. Pide a tu proveedor enlaces https.');if(!chans.length)throw new Error('La lista no contiene canales con enlaces http/https.');
     ME.m3u=ME.m3u||[];ME.m3u.push({id:uid(),name,url:txt||file?'':url,source,updated:Date.now(),channels:chans.slice(0,5000)});
@@ -719,7 +734,7 @@ function attach(v,src){
 }
 function fail(src,why){
   DB.stats.fails[src.id]=(DB.stats.fails[src.id]||0)+1;markHealth(src,'caída');
-  $('#psp')?.remove();$('#stage')?.insertAdjacentHTML('beforeend',`<div class="msg"><h3 style="margin-bottom:8px">No se pudo reproducir esta fuente</h3><p class="mute" style="margin:0 0 12px">${esc(why||'La fuente no respondió o está fuera de línea.')} Si estás viendo la app dentro de la vista previa de Claude, los videos externos están bloqueados ahí; ábrela desde tu sitio publicado (por ejemplo GitHub Pages).</p><div class="row-btns" style="justify-content:center"><button class="btn primary" data-act="retryPlay">Reintentar</button><button class="btn" data-act="closePlayer">Cerrar</button></div></div>`);
+  $('#psp')?.remove();$('#stage')?.insertAdjacentHTML('beforeend',`<div class="msg"><h3 style="margin-bottom:8px">No se pudo reproducir esta fuente</h3><p class="mute" style="margin:0 0 12px">${esc(why||(/^http:/i.test(src.url||'')&&location.protocol==='https:'?'Este canal usa un enlace http sin seguridad, que el navegador no permite abrir aquí.':'El canal no está transmitiendo en este momento o solo se puede ver desde su país de origen. Prueba otro canal.'))}${IN_PREVIEW?' En la vista previa de Claude los videos externos no cargan; ábrela desde tu sitio.':''}</p><div class="row-btns" style="justify-content:center"><button class="btn primary" data-act="retryPlay">Reintentar</button><button class="btn" data-act="closePlayer">Cerrar</button></div></div>`);
 }
 function markHealth(src,h){if(src.kind!=='channel')return;const c=DB.channels.find(x=>x.id===src.id)||(ME.m3u||[]).flatMap(l=>l.channels).find(x=>x.id===src.id);if(c&&c.type!=='link'){c.health=h;c.checked=Date.now();save()}}
 function closePlayer(){try{P.hls?.destroy()}catch(e){}try{P.dash?.reset()}catch(e){}P.stop&&P.stop();const v=$('#pv');if(v){v.pause();v.removeAttribute('src');v.load()}$('#player-root').innerHTML='';P.hls=P.dash=P.stop=null;if(ME&&VIEW!=='admin')renderView()}
@@ -989,7 +1004,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const kind=f.dataset.form;
   if(kind==='login'){const btn=f.querySelector('button[type=submit]');btn.disabled=true;$('#lg-err').textContent='Verificando…';const err=await login($('#lg-user').value,$('#lg-pw').value);btn.disabled=false;if(err){$('#lg-err').textContent=err;return}
-    VIEW='home';renderApp();if(ME.mustChange)pwModal(true);else toast('Bienvenido, '+(ME.name||ME.username).split(' ')[0]);return}
+    VIEW='home';renderApp();if(ME.mustChange)pwModal(true);else toast('Bienvenido, '+(ME.name||ME.username).split(' ')[0]);autoLoadLists();return}
   if(kind==='pw'){const err=$('#pw-err');const cur=$('#pw-cur');if(cur&&!(await verifyPw(cur.value,ME.hash))){err.textContent='La contraseña actual no es correcta.';return}
     const n=$('#pw-new').value;if(!pwPolicy(n)){err.textContent='Usa mínimo 10 caracteres, con letras y números.';return}if(n!==$('#pw-new2').value){err.textContent='Las contraseñas no coinciden.';return}
     ME.hash=await hashPw(n);ME.mustChange=false;ME.tempExpires=0;audit(ME.username,'contrasena_cambiada',ME.username);save();closeModal();toast('Contraseña actualizada');return}
@@ -1031,7 +1046,7 @@ document.addEventListener('keydown',e=>{
     if(!DB||DB.version!==1){$('#app').innerHTML='<div class="empty" style="margin:40px">Preparando datos de demostración…</div>';await seedDB()}
     ME=checkSession();if(ME)save();
     const h=(location.hash||'').slice(1);if(['home','live','movies','series','m3u','providers','favorites','account','settings','admin'].includes(h))VIEW=h;
-    renderApp();if(ME?.mustChange)pwModal(true);
+    renderApp();if(ME?.mustChange)pwModal(true);autoLoadLists();
   }catch(err){$('#app').innerHTML=`<div class="empty" style="margin:40px">No se pudo iniciar la app: ${esc(err.message)}. Ábrela en un navegador moderno con HTTPS.</div>`}
 })();
 </script>
