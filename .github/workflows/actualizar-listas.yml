@@ -16,6 +16,8 @@ jobs:
           curl -fsSL https://iptv-org.github.io/iptv/countries/mx.m3u -o listas/mx.m3u
           curl -fsSL https://iptv-org.github.io/iptv/countries/us.m3u -o listas/us.m3u
           curl -fsSL https://iptv-org.github.io/iptv/languages/spa.m3u -o listas/spa.m3u
+      - name: Quitar canales de TV de paga
+        run: python3 tools/filtrar_listas.py listas/*.m3u
       - name: Guardar cambios
         run: |
           git config user.name "github-actions"

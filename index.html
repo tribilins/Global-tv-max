@@ -217,10 +217,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 "use strict";
 /* ============================================================
    Global TV Max · v1.0 MVP (cliente)  — by Mr. Escudero / EIEL
-   Datos locales de demostración. La versión con servidor
+   Datos locales en el navegador. La versión con servidor
    (NestJS + PostgreSQL / Supabase) reemplaza la capa DB.
    ============================================================ */
-const VERSION='1.0.0';
+const VERSION='1.1.0';
 const DASH_LIB='https://cdn.jsdelivr.net/npm/dashjs@4.7.4/dist/dash.all.min.js';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -267,7 +267,7 @@ const ROLES={
   user:{name:'Usuario',perms:[]}
 };
 const COUNTRIES={MX:'México',US:'Estados Unidos',LATAM:'Latinoamérica',CA:'Canadá',EU:'Europa',AS:'Asia',INT:'Internacional'};
-const CATS={abierta:'Televisión abierta',noticias:'Noticias',deportes:'Deportes',entretenimiento:'Entretenimiento',peliculas:'Películas',musica:'Música',cultura:'Cultura y educación',regional:'Regionales',infantil:'Infantil'};
+const CATS={abierta:'Generales',noticias:'Noticias',deportes:'Deportes',peliculas:'Cine 24/7',series:'Series y novelas',entretenimiento:'Entretenimiento',infantil:'Infantil',musica:'Música',cultura:'Cultura y documentales',regional:'Regionales',religioso:'Religión',compras:'Compras',otros:'Otros'};
 const QUALITIES=['SD','HD 720p','Full HD 1080p','4K UHD','Calidad de origen no confirmada','CAM (solo material propio/autorizado)'];
 const RATINGS=['AA','A','B','B15','C','D'];
 const STREAMS={
@@ -293,23 +293,6 @@ const EPG_NAMES={
 function seedChannels(){
   const C=(id,name,country,cat,lang,url,format,authKey,extra={})=>({id,name,country,cat,lang,url,format,quality:'Calidad de origen no confirmada',authorization:AUTH_TEST[authKey],validation:'aprobada',health:'sin verificar',epg:true,enabled:true,demo:true,type:'stream',...extra});
   return [
-    C('ch-pattern','GTM Señal de Prueba','INT','cultura','Sin audio','', 'canvas','canvas',{quality:'HD 720p',health:'en línea'}),
-    C('ch-mx1','MX Demo · Abierta','MX','abierta','Español',STREAMS.bipbop,'hls','apple'),
-    C('ch-mx2','MX Demo · Noticias 24','MX','noticias','Español',STREAMS.live,'hls','akamai'),
-    C('ch-mx3','MX Demo · Deportes','MX','deportes','Español',STREAMS.bbb,'hls','mux'),
-    C('ch-mx4','MX Demo · Entretenimiento','MX','entretenimiento','Español',STREAMS.tos,'hls','unified'),
-    C('ch-mx5','MX Demo · Música','MX','musica','Español',STREAMS.bipbop,'hls','apple'),
-    C('ch-mx6','MX Demo · Cultura','MX','cultura','Español',STREAMS.tos,'hls','unified'),
-    C('ch-mx7','MX Demo · Frontera Chihuahua','MX','regional','Español',STREAMS.live,'hls','akamai'),
-    C('ch-us1','US Demo · News','US','noticias','English',STREAMS.live,'hls','akamai'),
-    C('ch-us2','US Demo · Sports','US','deportes','English',STREAMS.bbb,'hls','mux'),
-    C('ch-us3','US Demo · Movies','US','peliculas','English',STREAMS.tos,'hls','unified'),
-    C('ch-us4','US Demo · Español','US','entretenimiento','Español',STREAMS.bipbop,'hls','apple'),
-    C('ch-us5','US Demo · Music','US','musica','English',STREAMS.bbb,'hls','mux'),
-    C('ch-la1','LATAM Demo · Noticias','LATAM','noticias','Español',STREAMS.live,'hls','akamai'),
-    C('ch-ca1','CA Demo · Infantil','CA','infantil','English/Français',STREAMS.bbb,'hls','mux'),
-    C('ch-eu1','EU Demo · DASH','EU','peliculas','English',STREAMS.dash,'dash','akdash'),
-    C('ch-as1','Asia Demo · Cultura','AS','cultura','English',STREAMS.tos,'hls','unified'),
     // Señales oficiales: se abren en el sitio del proveedor
     {id:'ch-off1',name:'Canal Once',country:'MX',cat:'cultura',lang:'Español',type:'link',link:'https://canalonce.mx',format:'link',quality:'Según proveedor',authorization:'Enlace al sitio oficial',validation:'aprobada',health:'externo',epg:false,enabled:true},
     {id:'ch-off2',name:'TV UNAM',country:'MX',cat:'cultura',lang:'Español',type:'link',link:'https://tv.unam.mx',format:'link',quality:'Según proveedor',authorization:'Enlace al sitio oficial',validation:'aprobada',health:'externo',epg:false,enabled:true},
@@ -318,7 +301,7 @@ function seedChannels(){
   ];
 }
 function seedTitles(){
-  const T=(o)=>({type:'movie',langs:'Inglés',subs:'Según la fuente',quality:'Calidad de origen no confirmada',provider:'blender',countries:'Mundial',license:'Creative Commons (Blender Studio)',url:'',format:'hls',link:'https://studio.blender.org/films/',ratingNote:'Clasificación sugerida (dato demo)',...o});
+  const T=(o)=>({type:'movie',langs:'Inglés',subs:'Según la fuente',quality:'Calidad de origen no confirmada',provider:'blender',countries:'Mundial',license:'Creative Commons (Blender Studio)',url:'',format:'hls',link:'https://studio.blender.org/films/',ratingNote:'Clasificación sugerida',...o});
   return [
     T({id:'t-bbb',title:'Big Buck Bunny',original:'Big Buck Bunny',year:2008,genres:['Animación','Comedia'],duration:10,langs:'Sin diálogos',director:'Sacha Goedegebure',cast:'Animación',rating:'AA',synopsis:'Un conejo gigante y bonachón decide darles una lección a tres roedores que molestan a los animales del bosque.',url:STREAMS.bbb}),
     T({id:'t-tos',title:'Lágrimas de acero',original:'Tears of Steel',year:2012,genres:['Ciencia ficción','Acción'],duration:12,director:'Ian Hubert',cast:'Derek de Lint, Sergio Hasselbaink, Rogier Schippers',rating:'B',synopsis:'En una Ámsterdam futurista, un grupo de científicos intenta salvar al mundo recreando una ruptura amorosa del pasado.',url:STREAMS.tos}),
@@ -348,7 +331,7 @@ const PROVIDERS=[
 /* ---------- Base de datos local ---------- */
 const DB_KEY='gtm_db_v1';
 let DB=null,ME=null,VIEW='home',PENDING_PW=null;
-const ST={q:'',liveCountry:'MX',liveCat:'all',movieGenre:'all',adminTab:'resumen',uQ:'',uStatus:'all',uRole:'all',uPage:0,sel:new Set(),auditQ:'',m3uGroup:'all'};
+const ST={q:'',liveCountry:'MX',liveCat:'all',liveCC:'all',liveLim:60,m3uCountry:'ALL',m3uCat:'all',m3uCC:'all',m3uLim:60,m3uList:'all',movieGenre:'all',adminTab:'resumen',uQ:'',uStatus:'all',uRole:'all',uPage:0,sel:new Set(),auditQ:'',m3uGroup:'all'};
 const save=()=>LS.set(DB_KEY,DB);
 
 async function seedDB(){
@@ -362,15 +345,12 @@ async function seedDB(){
   const users=[
     await mk('admin','Superadministrador demo','superadmin','premium','GlobalTV-Demo-2026'),
     await mk('editor','Editor demo','editor','premium','Editor-Demo-2026'),
-    await mk('demo','Usuario demo (Plan Básico)','user','basico','Demo-2026-tv'),
-    await mk('maria.lopez','María López (ejemplo)','user','familiar',genPassword(),{lastLogin:now-3*864e5}),
-    await mk('juan.perez','Juan Pérez (ejemplo)','user','premium',genPassword(),{status:'suspendida'}),
-    await mk('ana.ruiz','Ana Ruiz (ejemplo)','user','basico',genPassword(),{expiresAt:todayISO(-5)})
+    await mk('demo','Usuario de prueba (Plan Básico)','user','basico','Demo-2026-tv')
   ];
-  DB={version:1,users,plans,channels:seedChannels(),titles:seedTitles(),sessions:[],audit:[],
+  DB={version:2,users,plans,channels:seedChannels(),titles:seedTitles(),sessions:[],audit:[],
       settings:{maxFailed:5,lockMinutes:15,tempHours:24,staffDevices:5},
       stats:{plays:{},fails:{},starts:[]}};
-  audit('sistema','datos_demo','base','Base de demostración creada');
+  audit('sistema','base_creada','base','Base inicial creada');
   save();
 }
 function audit(actor,action,target,detail=''){DB.audit.unshift({t:Date.now(),actor,action,target,detail});if(DB.audit.length>500)DB.audit.length=500}
@@ -467,14 +447,14 @@ function posterCard(t){
 }
 function channelTile(c){
   const locked=!catAllowed(c.cat);const now=epgFor(c,2);
-  const health=c.type==='link'?'<span class="tag">Sitio oficial</span>':c.health==='en línea'?'<span class="tag ok"><i class="dot ok"></i>En línea</span>':c.health==='caída'?'<span class="tag bad"><i class="dot bad"></i>Caído</span>':'<span class="tag"><i class="dot"></i>Sin verificar</span>';
+  const health=c.type==='link'?'<span class="tag">Sitio oficial</span>':c.health==='en línea'?'<span class="tag ok"><i class="dot ok"></i>Funciona</span>':c.health==='caída'?'<span class="tag bad"><i class="dot bad"></i>No abrió</span>':'';
   const logo=c.logo?`<img src="${esc(c.logo)}" alt="" loading="lazy" onerror="this.remove()">`:esc(initials(c.name));
   return `<div class="ch-tile ${locked?'locked':''}">
     <button class="ch-logo" style="background:${chColor(c.id)}" data-act="channel" data-id="${c.id}" aria-label="Ver ${esc(c.name)}">${logo}</button>
     <button class="info" data-act="channel" data-id="${c.id}" style="text-align:left">
       <strong>${locked?ic('lock')+' ':''}${esc(c.name)}</strong>
-      <div class="now">${now.length?`<span class="mono">${fmtTime(now[0].t)}</span> ${esc(now[0].title)} · después: ${esc(now[1].title)}`:esc(CATS[c.cat]||c.group||'')+' · '+esc(c.lang||'')}</div>
-      <div class="tags"><span class="tag">${esc(c.country)}</span>${c.type!=='link'&&c.type!=='m3u'?'<span class="tag live">En vivo</span>':''}${c.demo?'<span class="tag demo">Demo</span>':''}${health}</div>
+      <div class="now">${now.length?`<span class="mono">${fmtTime(now[0].t)}</span> ${esc(now[0].title)} · después: ${esc(now[1].title)}`:esc(CATS[c.cat]||'')+(c.cc&&CC_NAMES[c.cc]?' · '+esc(CC_NAMES[c.cc]):'')}</div>
+      <div class="tags"><span class="tag">${esc(c.cc?c.cc.toUpperCase():c.country)}</span>${c.type!=='link'?'<span class="tag live">En vivo</span>':''}${c.part?'<span class="tag">Horario parcial</span>':''}${c.geo?'<span class="tag warn">Solo en su país</span>':''}${health}</div>
     </button>
     <button class="star" data-act="fav" data-id="${c.id}" aria-pressed="${isFav(c.id)}" aria-label="Favorito">${ic('star',isFav(c.id))}</button>
   </div>`;
@@ -493,7 +473,7 @@ function renderApp(){
     <aside class="side"><div class="logo"><span class="mark">TV</span><span>Global TV Max</span></div>
       ${NAV.map(navBtn).join('')}
       ${adminVisible?`<div class="nav-sep"></div>${navBtn(['admin','Administración','shield'])}`:''}
-      <div style="margin-top:auto" class="mute mono" ><small>v${VERSION} · datos demo</small></div>
+      <div style="margin-top:auto" class="mute mono" ><small>v${VERSION}</small></div>
     </aside>
     <main>
       <header class="top">
@@ -519,52 +499,78 @@ function go(v){VIEW=v;ST.q='';const q=$('#q');if(q)q.value='';renderView();windo
 
 function vHome(){
   const titles=DB.titles.filter(t=>ratingOK(t.rating));const feat=titles.find(t=>t.url)||titles[0];
-  const chans=visibleChannels().filter(c=>c.type!=='link'&&catAllowed(c.cat)).slice(0,8);
+  const all=allChannels();
+  const pick=(cat,reg)=>sortCh(all.filter(c=>c.cat===cat&&(!reg||c.country===reg))).slice(0,12);
   const cont=Object.entries(ME.history).sort((a,b)=>b[1].t-a[1].t).map(([id])=>DB.titles.find(t=>t.id===id)).filter(Boolean);
-  const pop=[...titles].sort((a,b)=>(DB.stats.plays[b.id]||0)-(DB.stats.plays[a.id]||0));
-  const recent=[...titles].sort((a,b)=>b.year-a.year);
-  const likedGenres=new Set(ME.favorites.concat(Object.keys(ME.history)).map(id=>DB.titles.find(t=>t.id===id)).filter(Boolean).flatMap(t=>t.genres));
-  const rec=titles.filter(t=>!ME.history[t.id]&&(likedGenres.size===0||t.genres.some(g=>likedGenres.has(g))));
+  const rails=[['Generales de México','abierta','MX'],['Noticias de México','noticias','MX'],['Cine 24/7','peliculas',null],['Deportes','deportes',null],['Series y novelas','series',null],['Infantil','infantil',null],['Música','musica',null]];
+  const railHtml=rails.map(([t,cat,reg])=>{const l=pick(cat,reg);return l.length?section(t,`<div class="rail wide">${l.map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="br" data-key="live" data-f="Go" data-k="${reg||'ALL'}|${cat}">Ver todos</button>`):''}).join('');
   return `
   <div class="hero"><div class="bg" style="background:${gradFor(feat.id)}"></div>
-    <div><div class="eyebrow" style="color:#cfe">Destacado · ${feat.type==='series'?'Serie':'Película'} abierta</div>
+    <div><div class="eyebrow" style="color:#cfe">Película completa gratis</div>
       <h1>${esc(feat.title)}</h1><div class="hero meta" style="padding:0;min-height:0"><span class="tag">${feat.year}</span><span class="tag">${esc(feat.genres.join(' · '))}</span><span class="tag">${esc(feat.rating)}</span></div>
       <p>${esc(feat.synopsis)}</p>
       <div class="row-btns"><button class="btn primary" data-act="play" data-id="${feat.id}">${ic('play')}Reproducir</button><button class="btn" data-act="title" data-id="${feat.id}">Más información</button></div>
     </div></div>
-  <div class="chips">${Object.entries(CATS).map(([k,l])=>`<button class="chip" data-act="quickCat" data-cat="${k}">${l}</button>`).join('')}</div>
+  <div class="chips">${catCounts(all).map(([k,n])=>`<button class="chip" data-act="br" data-key="live" data-f="Go" data-k="ALL|${k}">${CATS[k]} · ${n}</button>`).join('')}</div>
+  ${!all.length&&LISTS_LOADING?'<div class="empty">Cargando canales…</div>':''}
   ${cont.length?section('Continuar viendo',`<div class="rail">${cont.map(posterCard).join('')}</div>`):''}
-  ${section('En vivo ahora',`<div class="rail wide">${chans.map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="go" data-v="live">Ver guía</button>`)}
-  ${section('Populares',`<div class="rail">${pop.map(posterCard).join('')}</div>`)}
-  ${section('Lo más reciente',`<div class="rail">${recent.map(posterCard).join('')}</div>`)}
-  ${rec.length?section('Recomendado para ti',`<div class="rail">${rec.map(posterCard).join('')}</div>`):''}
-  ${ME.favorites.length?section('Tus favoritos',`<div class="rail wide">${favItems().slice(0,10).map(x=>x.kind==='ch'?channelTile(x.o):posterCard(x.o)).join('')}</div>`):''}`;
+  ${ME.favorites.length?section('Tus favoritos',`<div class="rail wide">${favItems().slice(0,12).map(x=>x.kind==='ch'?channelTile(x.o):posterCard(x.o)).join('')}</div>`):''}
+  ${railHtml}
+  ${section('Películas completas gratis',`<div class="rail">${titles.map(posterCard).join('')}</div>`)}`;
+}
+/* ---------- Explorador organizado: país → categoría ---------- */
+const REGIONS=[['MX','México'],['US','Estados Unidos'],['LATAM','Latinoamérica'],['EU','España y Europa'],['CA','Canadá'],['INT','Internacional'],['ALL','Todos los países']];
+const CC_NAMES={ar:'Argentina',bo:'Bolivia',br:'Brasil',cl:'Chile',co:'Colombia',cr:'Costa Rica',cu:'Cuba',do:'Rep. Dominicana',ec:'Ecuador',gt:'Guatemala',hn:'Honduras',ni:'Nicaragua',pa:'Panamá',pe:'Perú',pr:'Puerto Rico',py:'Paraguay',sv:'El Salvador',uy:'Uruguay',ve:'Venezuela',es:'España',de:'Alemania',uk:'Reino Unido',gb:'Reino Unido',fr:'Francia',it:'Italia',pt:'Portugal',nl:'Países Bajos',be:'Bélgica',ch:'Suiza',at:'Austria',ie:'Irlanda'};
+function catCounts(list){const m={};list.forEach(c=>m[c.cat]=(m[c.cat]||0)+1);return Object.keys(CATS).filter(k=>m[k]).map(k=>[k,m[k]])}
+function sortCh(list){const sc=c=>(c.type==='link'?0:2)+(c.health==='en línea'?-1:0)+(c.health==='caída'?5:0)+(c.logo?0:1)+(c.part?2:0)+(c.geo?1:0);return [...list].sort((a,b)=>sc(a)-sc(b)||a.name.localeCompare(b.name,'es'))}
+function channelBrowser(source,key){
+  const g=f=>ST[key+f];
+  let reg=g('Country')||'MX';const inReg=c=>reg==='ALL'||c.country===reg;
+  const regCount=r=>r==='ALL'?source.length:source.filter(c=>c.country===r).length;
+  const regs=REGIONS.filter(([r])=>r==='MX'||r==='ALL'||regCount(r));
+  let list=source.filter(inReg);
+  const ccs=[...new Set(list.map(c=>c.cc).filter(Boolean))];
+  const cc=g('CC')||'all';if(cc!=='all')list=list.filter(c=>c.cc===cc);
+  const counts=catCounts(list);const cat=g('Cat')||'all';
+  const chip=(f,k,l,cur)=>`<button class="chip" data-act="br" data-key="${key}" data-f="${f}" data-k="${esc(k)}" aria-pressed="${cur===k}">${l}</button>`;
+  let body='';
+  if(!list.length)body=`<div class="empty">${LISTS_LOADING?'Cargando canales…':'No hay canales aquí todavía.'}</div>`;
+  else if(cat==='all'){
+    body=counts.map(([k,n])=>{const l=sortCh(list.filter(c=>c.cat===k));return section(`${CATS[k]} <span class="mute mono" style="font-size:.85rem;font-weight:500">${n}</span>`,`<div class="grid ch">${l.slice(0,6).map(channelTile).join('')}</div>`,n>6?`<button class="btn sm" data-act="br" data-key="${key}" data-f="Cat" data-k="${k}">Ver los ${n}</button>`:'')}).join('');
+  }else{
+    const l=sortCh(list.filter(c=>c.cat===cat));const lim=g('Lim')||60;
+    body=`<div class="grid ch">${l.slice(0,lim).map(channelTile).join('')}</div>${l.length>lim?`<div class="row-btns" style="justify-content:center"><button class="btn" data-act="br" data-key="${key}" data-f="Lim" data-k="${lim+60}">Mostrar más (${l.length-lim} restantes)</button></div>`:''}`;
+  }
+  return `<div class="chips" aria-label="País">${regs.map(([r,l])=>chip('Country',r,`${l} · ${regCount(r)}`,reg)).join('')}</div>
+   ${ccs.length>1?`<div class="chips" aria-label="País específico">${chip('CC','all','Todos',cc)}${ccs.sort((a,b)=>(CC_NAMES[a]||a).localeCompare(CC_NAMES[b]||b,'es')).map(x=>chip('CC',x,CC_NAMES[x]||x.toUpperCase(),cc)).join('')}</div>`:''}
+   <div class="chips" aria-label="Categoría">${chip('Cat','all','Todas las categorías',cat)}${counts.map(([k,n])=>chip('Cat',k,`${CATS[k]} · ${n}`,cat)).join('')}</div>
+   ${body}`;
 }
 function vLive(){
-  const groups={MX:['MX'],US:['US'],otros:['LATAM','CA','EU','AS','INT']};
-  let list=visibleChannels().filter(c=>groups[ST.liveCountry]?.includes(c.country));
-  if(ST.liveCat!=='all')list=list.filter(c=>c.cat===ST.liveCat);
-  const cats=[...new Set(visibleChannels().filter(c=>groups[ST.liveCountry]?.includes(c.country)).map(c=>c.cat))];
-  const chip=(k,l,cur,act)=>`<button class="chip" data-act="${act}" data-k="${k}" aria-pressed="${cur===k}">${l}</button>`;
-  return `<div><div class="eyebrow">TV en vivo</div><h1 style="font-size:1.9rem">Canales por país</h1></div>
-   <div class="chips">${chip('MX','México',ST.liveCountry,'liveCountry')}${chip('US','Estados Unidos',ST.liveCountry,'liveCountry')}${chip('otros','Otros países',ST.liveCountry,'liveCountry')}</div>
-   <div class="chips">${chip('all','Todas',ST.liveCat,'liveCat')}${cats.map(c=>chip(c,CATS[c],ST.liveCat,'liveCat')).join('')}</div>
-   ${list.length?`<div class="grid ch">${list.map(channelTile).join('')}</div>`:'<div class="empty">No hay canales en esta categoría todavía.</div>'}
-   <p class="note">Los canales marcados como <b>Demo</b> usan transmisiones públicas de prueba. Las señales reales de México y EE. UU. se agregan desde Administración cuando exista contrato o autorización del titular. La programación (EPG) mostrada es de demostración.</p>`;
+  return `<div><div class="eyebrow">TV en vivo</div><h1 style="font-size:1.9rem">Canales por país y categoría</h1></div>
+   ${channelBrowser(allChannels(),'live')}
+   <p class="note">Canales gratuitos que las televisoras transmiten por internet. Los de TV de paga se filtran automáticamente. Si un canal no abre, puede estar fuera del aire o limitado a su país de origen.</p>`;
 }
+function freePlatformChannels(){return sortCh(allChannels().filter(c=>FREE_PLATFORM.test(c.name)))}
 function vCatalog(type){
   let list=DB.titles.filter(t=>t.type===type&&ratingOK(t.rating));
   const genres=[...new Set(list.flatMap(t=>t.genres))].sort();
   if(ST.movieGenre!=='all')list=list.filter(t=>t.genres.includes(ST.movieGenre));
+  const chCat=type==='movie'?'peliculas':'series';
+  const live=sortCh(allChannels().filter(c=>c.cat===chCat)).sort((a,b)=>(/^(MX|LATAM|EU)$/.test(a.country)?0:1)-(/^(MX|LATAM|EU)$/.test(b.country)?0:1));
+  const plat=freePlatformChannels().filter(c=>c.cat===chCat||c.cat==='entretenimiento');
   return `<div><div class="eyebrow">Catálogo</div><h1 style="font-size:1.9rem">${type==='movie'?'Películas':'Series'}</h1></div>
-   <div class="chips"><button class="chip" data-act="genre" data-k="all" aria-pressed="${ST.movieGenre==='all'}">Todos</button>${genres.map(g=>`<button class="chip" data-act="genre" data-k="${esc(g)}" aria-pressed="${ST.movieGenre===g}">${esc(g)}</button>`).join('')}</div>
-   ${list.length?`<div class="grid">${list.map(posterCard).join('')}</div>`:'<div class="empty">No hay títulos con este filtro.</div>'}
-   <p class="note">El catálogo inicial usa películas abiertas de Blender Studio (licencia Creative Commons). Los títulos comerciales y su disponibilidad por plataforma se cargan con una API de metadatos autorizada (TMDB / JustWatch) en la Fase 3.</p>`;
+   ${live.length?section(type==='movie'?'Canales de cine 24/7':'Canales de series y novelas 24/7',`<div class="rail wide">${live.slice(0,16).map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="br" data-key="live" data-f="Go" data-k="ALL|${chCat}">Ver los ${live.length}</button>`):''}
+   ${plat.length?section('De plataformas gratuitas (Pluto TV, ViX y más)',`<div class="rail wide">${plat.slice(0,16).map(channelTile).join('')}</div>`,`<button class="btn sm" data-act="go" data-v="providers">Ver todos</button>`):''}
+   ${section(type==='movie'?'Películas completas gratis':'Series completas gratis',`<div class="chips" style="margin-bottom:12px"><button class="chip" data-act="genre" data-k="all" aria-pressed="${ST.movieGenre==='all'}">Todos</button>${genres.map(g=>`<button class="chip" data-act="genre" data-k="${esc(g)}" aria-pressed="${ST.movieGenre===g}">${esc(g)}</button>`).join('')}</div>
+   ${list.length?`<div class="grid">${list.map(posterCard).join('')}</div>`:'<div class="empty">No hay títulos con este filtro.</div>'}`)}`;
 }
 function vProviders(){
-  return `<div><div class="eyebrow">Directorio</div><h1 style="font-size:1.9rem">Plataformas de streaming</h1></div>
-   <div class="grid ch">${PROVIDERS.map(p=>`<div class="ch-tile" style="grid-template-columns:auto 1fr auto"><div class="ch-logo" style="background:${chColor(p.id)}">${esc(initials(p.name))}</div><div class="info"><strong>${esc(p.name)}</strong><div class="now">${esc(p.kind)}</div><div class="tags"><span class="tag">${esc(p.regions)}</span></div></div><a class="btn sm" href="${p.url}" target="_blank" rel="noopener">Abrir ${ic('ext')}</a></div>`).join('')}</div>
-   <p class="note">Esta app no retransmite contenido de estas plataformas: abre su sitio o app oficial con tu propia suscripción. La disponibilidad por título y país requiere API autorizada. Datos de regiones: referencia, verifícalos con cada proveedor.</p>`;
+  const plat=freePlatformChannels();const byP={};plat.forEach(c=>{const p=(c.name.match(FREE_PLATFORM)||['Otras'])[0].replace(/^./,x=>x.toUpperCase());(byP[p]=byP[p]||[]).push(c)});
+  return `<div><div class="eyebrow">Plataformas</div><h1 style="font-size:1.9rem">Plataformas de streaming</h1></div>
+   ${plat.length?section(`Velas aquí mismo · ${plat.length} canales`,Object.entries(byP).map(([p,l])=>`<div style="margin-bottom:18px"><div class="eyebrow" style="margin-bottom:8px">${esc(p)} · ${l.length}</div><div class="rail wide">${l.slice(0,30).map(channelTile).join('')}</div></div>`).join('')):''}
+   ${section('Abrir en su app oficial',`<div class="grid ch">${PROVIDERS.filter(p=>p.id!=='blender').map(p=>`<div class="ch-tile" style="grid-template-columns:auto 1fr auto"><div class="ch-logo" style="background:${chColor(p.id)}">${esc(initials(p.name))}</div><div class="info"><strong>${esc(p.name)}</strong><div class="now">${esc(p.kind)}</div></div><a class="btn sm" href="${p.url}" target="_blank" rel="noopener">Abrir ${ic('ext')}</a></div>`).join('')}</div>`)}
+   <p class="note">Pluto TV, ViX y otras plataformas gratuitas publican sus canales en vivo, por eso se ven dentro de la app. Netflix, Prime Video, Disney+, HBO Max, Apple TV y Paramount+ no permiten que otra app reproduzca sus películas: se abren en su app con tu suscripción.</p>`;
 }
 function favItems(){return ME.favorites.map(id=>{const c=allChannels().find(x=>x.id===id);if(c)return{kind:'ch',o:c};const t=DB.titles.find(x=>x.id===id);return t?{kind:'t',o:t}:null}).filter(Boolean)}
 function vFavorites(){const f=favItems();const ch=f.filter(x=>x.kind==='ch').map(x=>x.o),t=f.filter(x=>x.kind==='t').map(x=>x.o);
@@ -574,12 +580,12 @@ function vFavorites(){const f=favItems();const ch=f.filter(x=>x.kind==='ch').map
   ${t.length?section('Películas y series',`<div class="grid">${t.map(posterCard).join('')}</div>`):''}`}
 function vSearch(){
   const q=ST.q.trim().toLowerCase();
-  const ch=allChannels().filter(c=>(c.name+' '+(CATS[c.cat]||'')+' '+(COUNTRIES[c.country]||'')+' '+(c.group||'')).toLowerCase().includes(q));
+  const nq=x=>String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const qq=nq(q);const ch=sortCh(allChannels().filter(c=>nq(c.name+' '+(CATS[c.cat]||'')+' '+(COUNTRIES[c.country]||'')+' '+(CC_NAMES[c.cc]||'')).includes(qq)));
   const t=DB.titles.filter(x=>ratingOK(x.rating)&&(x.title+' '+x.original+' '+x.genres.join(' ')+' '+x.director+' '+x.cast).toLowerCase().includes(q));
   const p=PROVIDERS.filter(x=>x.name.toLowerCase().includes(q));
   return `<div><div class="eyebrow">Resultados</div><h1 style="font-size:1.6rem">“${esc(ST.q)}”</h1></div>
    ${!ch.length&&!t.length&&!p.length?'<div class="empty">Sin resultados. Prueba con un país, género o nombre de canal.</div>':''}
-   ${ch.length?section(`Canales (${ch.length})`,`<div class="grid ch">${ch.slice(0,30).map(channelTile).join('')}</div>`):''}
+   ${ch.length?section(`Canales (${ch.length})`,`<div class="grid ch">${ch.slice(0,60).map(channelTile).join('')}</div>`):''}
    ${t.length?section(`Películas y series (${t.length})`,`<div class="grid">${t.map(posterCard).join('')}</div>`):''}
    ${p.length?section('Plataformas',`<div class="row-btns">${p.map(x=>`<a class="btn" href="${x.url}" target="_blank" rel="noopener">${esc(x.name)} ${ic('ext')}</a>`).join('')}</div>`):''}`;
 }
@@ -589,25 +595,54 @@ function vMore(){
 }
 
 /* ---------- Listas M3U (modo reproductor) ---------- */
-function allChannels(){return visibleChannels().concat((ME?.m3u||[]).flatMap(l=>l.channels.map(c=>({...c,listId:l.id}))))}
-function parseM3U(text){
+const PRESET_CH={};let LISTS_LOADING=false;
+const PAY_TV=/\b(a&e|amc|axn|autentic|cine ?sony|sony|cinelatino|cinecanal|cinemax|hbo|max prime|claro (cinema|sports|musica)|cartoon ?network|cartoonito|comedy central|de pel[ií]cula|discovery|disney|e!|espn\w*|fx|filmex|food network|fox sports|golden|multipremier|space|tnt|universal|warner|studio|star channel|paramount network|nick(elodeon)?|history|nat ?geo|national geographic|lifetime|tlc|hgtv|mtv|vh1|telehit|bandamax|unicable|tl ?novelas|distrito comedia|win sports|dazn|bein|sky|tudn|galavision|cnn|tyc sports|tnt sports|directv|dsports|gol ?tv|willax|movistar|cine ?premium|cine ?latino|pasiones|tooncast|boomerang|adult swim|syfy|usa network|showtime|starz|epix|mgm|sundance|ifc|bravo|oxygen|investigation discovery|animal planet|travel channel|cooking channel|velocity|bbc|hallmark|sec network|acc network|nfl network|nba tv|mlb network|nhl network|big ten|golf channel|tennis channel|fight network)\b/i;
+const FREE_PLATFORM=/pluto|vix|tubi|plex|samsung tv plus|xumo|runtime|canela|stirr|roku/i;
+const isPayTV=n=>PAY_TV.test(n)&&!FREE_PLATFORM.test(n);
+const LATAM_CC=new Set('ar bo br cl co cr cu do ec gt hn ni pa pe pr py sv uy ve'.split(' '));
+const EU_CC=new Set('es de uk gb fr it pt nl be ch at ie se no dk fi pl'.split(' '));
+function regionOf(cc,def){if(cc==='mx')return'MX';if(cc==='us')return'US';if(cc==='ca')return'CA';if(LATAM_CC.has(cc))return'LATAM';if(EU_CC.has(cc))return'EU';return def||'INT'}
+const GROUP_MAP={general:'abierta',public:'abierta',news:'noticias',business:'noticias',weather:'noticias',legislative:'noticias',sports:'deportes',movies:'peliculas',classic:'peliculas',series:'series',entertainment:'entretenimiento',comedy:'entretenimiento',family:'entretenimiento',lifestyle:'entretenimiento',cooking:'entretenimiento',auto:'entretenimiento',relax:'entretenimiento',kids:'infantil',animation:'infantil',music:'musica',education:'cultura',culture:'cultura',documentary:'cultura',science:'cultura',travel:'cultura',outdoor:'cultura',religious:'religioso',shop:'compras',undefined:'otros'};
+const GROUP_WORDS=[['notici','noticias'],['news','noticias'],['deport','deportes'],['sport','deportes'],['futbol','deportes'],['cine','peliculas'],['pelic','peliculas'],['movie','peliculas'],['serie','series'],['novela','series'],['music','musica'],['infant','infantil'],['nino','infantil'],['kid','infantil'],['relig','religioso'],['cristian','religioso'],['catol','religioso'],['cultur','cultura'],['document','cultura'],['educa','cultura'],['entreten','entretenimiento'],['local','regional'],['regional','regional'],['general','abierta']];
+function catFromGroup(g,name=''){
+  const parts=String(g||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[;,\/|]/).map(s=>s.trim()).filter(Boolean);let fb=null;
+  for(const p of parts){let c=GROUP_MAP[p];if(!c)for(const [w,v] of GROUP_WORDS)if(p.includes(w)){c=v;break}if(!c)continue;if(c==='abierta'||c==='otros'){fb=fb||c;continue}return c}
+  if(fb!=='abierta'){const n=name.toLowerCase();for(const [w,v] of GROUP_WORDS)if(w!=='general'&&n.includes(w))return v}
+  return fb||'otros';
+}
+function listChannels(l){return l.channels||PRESET_CH[l.preset]||[]}
+let _allKey='',_allCache=[];
+function allChannels(){
+  const lists=ME?.m3u||[];const key=lists.map(l=>l.id+':'+listChannels(l).length).join('|')+'#'+DB.channels.length;
+  if(key===_allKey)return _allCache;
+  const seen=new Set();const out=[];
+  for(const c of visibleChannels()){out.push(c);if(c.url)seen.add(c.url)}
+  for(const l of lists)for(const c of listChannels(l)){if(seen.has(c.url))continue;seen.add(c.url);out.push({...c,listId:l.id})}
+  _allKey=key;_allCache=out;return out;
+}
+function parseM3U(text,defCountry){
   const lines=text.replace(/\r/g,'').split('\n');const out=[];let cur=null;
   if(!/^#EXTM3U/i.test(lines[0]?.trim()||''))throw new Error('El archivo no empieza con #EXTM3U. Verifica que sea una lista M3U válida.');
   for(const raw of lines){const l=raw.trim();if(!l)continue;
-    if(l.startsWith('#EXTINF')){const attr=k=>(l.match(new RegExp(k+'="([^"]*)"','i'))||[])[1]||'';cur={name:(l.split(',').slice(1).join(',')||attr('tvg-name')||'Canal').trim(),logo:attr('tvg-logo'),group:attr('group-title')||'Sin grupo',tvgId:attr('tvg-id'),country:(attr('tvg-country')||'INT').toUpperCase().slice(0,5)}}
-    else if(!l.startsWith('#')){const url=l;if(!/^https?:\/\//i.test(url)){cur=null;continue}const c=cur||{name:url.split('/').pop(),group:'Sin grupo',country:'INT'};
-      out.push({id:'m3u-'+hashN(url+c.name).toString(36),name:c.name.slice(0,120),logo:/^https?:\/\//.test(c.logo)?c.logo:'',group:c.group.slice(0,60),country:c.country,cat:'m3u',lang:'',url,format:/\.mpd(\?|$)/i.test(url)?'dash':'hls',type:'m3u',health:'sin verificar',epg:false,enabled:true,validation:'aprobada'});cur=null}}
+    if(l.startsWith('#EXTINF')){const attr=k=>(l.match(new RegExp(k+'="([^"]*)"','i'))||[])[1]||'';
+      const rawName=(l.split(',').slice(1).join(',')||attr('tvg-name')||'Canal').trim();const tvgId=attr('tvg-id');
+      const m=tvgId.match(/\.([a-z]{2})(@|$)/i);const cc=(m?m[1]:attr('tvg-country').slice(0,2)).toLowerCase();
+      cur={rawName,name:rawName.replace(/\s*\(\d{3,4}[pi]\)/gi,'').replace(/\s*\[[^\]]*\]/g,'').trim()||rawName,logo:attr('tvg-logo'),group:attr('group-title')||'',cc,geo:/geo-blocked/i.test(rawName),part:/not 24\/7/i.test(rawName)}}
+    else if(!l.startsWith('#')){const url=l;if(!/^https?:\/\//i.test(url)){cur=null;continue}const c=cur||{name:url.split('/').pop(),rawName:'',group:'',cc:''};
+      out.push({id:'m3u-'+hashN(url+c.name).toString(36),name:c.name.slice(0,120),logo:/^https?:\/\//.test(c.logo||'')?c.logo:'',group:(c.group||'').slice(0,60),cc:c.cc||'',country:regionOf(c.cc,defCountry),cat:catFromGroup(c.group,c.name),lang:'',url,format:/\.mpd(\?|$)/i.test(url)?'dash':'hls',type:'m3u',health:'sin verificar',epg:false,enabled:true,validation:'aprobada',geo:!!c.geo,part:!!c.part});cur=null}}
   return out;
 }
 function vM3U(){
-  const lists=ME.m3u||[];const all=lists.flatMap(l=>l.channels.map(c=>({...c,listId:l.id})));
-  const groups=[...new Set(all.map(c=>c.group))];let shown=ST.m3uGroup==='all'?all:all.filter(c=>c.group===ST.m3uGroup);
-  return `<div><div class="eyebrow">Modo reproductor</div><h1 style="font-size:1.9rem">Mis listas M3U</h1><p class="mute" style="max-width:62ch">Carga la lista M3U/M3U8 que te da tu proveedor de TV contratado o una lista de canales gratuitos y legales. La app solo la reproduce en tu dispositivo; no incluye ni distribuye listas.</p></div>
-   <div class="row-btns"><button class="btn accent" data-act="m3uAdd">+ Agregar lista</button>${PUBLIC_LISTS.map(p=>`<button class="btn" data-act="m3uPreset" data-k="${p.id}">Cargar ${esc(p.name)}</button>`).join('')}</div>
-   ${lists.length?`<div class="tbl-wrap"><table><thead><tr><th>Lista</th><th>Canales</th><th>Origen</th><th>Actualizada</th><th></th></tr></thead><tbody>${lists.map(l=>`<tr><td><strong>${esc(l.name)}</strong></td><td class="mono">${l.channels.length}</td><td class="mute">${esc(l.source)}</td><td>${fmtDT(l.updated)}</td><td><div class="row-btns">${l.url?`<button class="btn sm" data-act="m3uRefresh" data-id="${l.id}">Actualizar</button>`:''}<button class="btn sm danger" data-act="m3uDel" data-id="${l.id}">Quitar</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Todavía no tienes listas. Toca “Agregar lista” y pega el enlace, el texto o sube el archivo .m3u.</div>'}
-   ${all.length?`<div class="chips"><button class="chip" data-act="m3uGroup" data-k="all" aria-pressed="${ST.m3uGroup==='all'}">Todos (${all.length})</button>${groups.map(g=>`<button class="chip" data-act="m3uGroup" data-k="${esc(g)}" aria-pressed="${ST.m3uGroup===g}">${esc(g)}</button>`).join('')}</div>
-   <div class="grid ch">${shown.slice(0,300).map(channelTile).join('')}</div>${shown.length>300?`<p class="mute">Mostrando 300 de ${shown.length}. Usa la búsqueda para encontrar el resto.</p>`:''}`:''}
-   <p class="note">Usa solo listas de servicios que tengas contratados o de canales con transmisión libre y autorizada. Las listas se guardan únicamente en este dispositivo.</p>`;
+  const lists=ME.m3u||[];const sel=ST.m3uList||'all';const chosen=sel==='all'?lists:lists.filter(l=>l.id===sel);
+  const seen=new Set();const src=[];chosen.forEach(l=>listChannels(l).forEach(c=>{if(!seen.has(c.url)){seen.add(c.url);src.push(c)}}));
+  return `<div><div class="eyebrow">Modo reproductor</div><h1 style="font-size:1.9rem">Mis listas</h1><p class="mute" style="max-width:62ch">Cada lista aparece en su propio apartado y sus canales se acomodan por país y categoría. También se integran en TV en vivo.</p></div>
+   <div class="row-btns"><button class="btn accent" data-act="m3uAdd">+ Agregar lista</button>${PUBLIC_LISTS.filter(p=>!lists.some(l=>l.preset===p.id)).map(p=>`<button class="btn" data-act="m3uPreset" data-k="${p.id}">Cargar ${esc(p.name)}</button>`).join('')}</div>
+   ${lists.length?`<div class="cards3">${lists.map(l=>{const ch=listChannels(l);const cc=catCounts(ch);return `<div class="panel" style="display:flex;flex-direction:column;gap:10px;${sel===l.id?'border-color:var(--accent)':''}">
+     <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0"><h3>${esc(l.name)}</h3><small class="mute">${esc(l.source)} · ${fmtDT(l.updated)}</small></div><b class="mono" style="font-size:1.4rem">${ch.length}</b></div>
+     <div class="checks">${cc.slice(0,8).map(([k,n])=>`<span class="tag">${CATS[k]} ${n}</span>`).join('')}</div>
+     <div class="row-btns"><button class="btn sm ${sel===l.id?'accent':''}" data-act="m3uList" data-k="${l.id}">Ver esta lista</button>${l.url||l.preset?`<button class="btn sm" data-act="m3uRefresh" data-id="${l.id}">Actualizar</button>`:''}<button class="btn sm danger" data-act="m3uDel" data-id="${l.id}">Quitar</button></div></div>`}).join('')}</div>`:'<div class="empty">Todavía no tienes listas. Toca “Agregar lista” o carga una de las listas gratuitas.</div>'}
+   ${lists.length?`<div class="sec-head" style="margin:0"><h2>${sel==='all'?'Todos los canales de tus listas':esc(chosen[0]?.name||'')}</h2>${sel!=='all'?'<button class="btn sm" data-act="m3uList" data-k="all">Ver todas las listas</button>':''}</div>${channelBrowser(src,'m3u')}`:''}
+   <p class="note">Usa solo listas de servicios que tengas contratados o de canales con transmisión libre. Tus listas propias se guardan únicamente en este dispositivo.</p>`;
 }
 function m3uModal(){
   openModal(`${mHead('Agregar lista M3U','Modo reproductor')}
@@ -625,18 +660,21 @@ function m3uModal(){
    </form>`);
 }
 const PUBLIC_LISTS=[
-  {id:'mx',name:'México (gratuitos)',url:'listas/mx.m3u',remote:'https://iptv-org.github.io/iptv/countries/mx.m3u'},
-  {id:'us',name:'Estados Unidos (gratuitos)',url:'listas/us.m3u',remote:'https://iptv-org.github.io/iptv/countries/us.m3u'},
-  {id:'spa',name:'Canales en español',url:'listas/spa.m3u',remote:'https://iptv-org.github.io/iptv/languages/spa.m3u'}
+  {id:'mx',name:'México',def:'MX',url:'listas/mx.m3u',remote:'https://iptv-org.github.io/iptv/countries/mx.m3u'},
+  {id:'us',name:'Estados Unidos',def:'US',url:'listas/us.m3u',remote:'https://iptv-org.github.io/iptv/countries/us.m3u'},
+  {id:'spa',name:'Canales en español',def:'INT',url:'listas/spa.m3u',remote:'https://iptv-org.github.io/iptv/languages/spa.m3u'}
 ];
+async function loadPresetChannels(id,force){
+  if(PRESET_CH[id]&&!force)return PRESET_CH[id];const p=PUBLIC_LISTS.find(x=>x.id===id);if(!p)return [];
+  PRESET_CH[id]=onlyCompatible(parseM3U(await fetchPreset(p),p.def)).filter(c=>!isPayTV(c.rawName||c.name)&&!isPayTV(c.name));return PRESET_CH[id];
+}
 async function autoLoadLists(){
-  if(!ME||(ME.m3u&&ME.m3u.length)||ME.autoLoaded)return;
-  ME.autoLoaded=true;save();
-  for(const p of PUBLIC_LISTS.filter(x=>x.id==='mx'||x.id==='spa')){
-    try{const chans=onlyCompatible(parseM3U(await fetchPreset(p)));if(!chans.length)continue;ME.m3u=ME.m3u||[];
-      ME.m3u.push({id:uid(),name:p.name+' · iptv-org',url:p.url,source:'iptv-org (índice público)',updated:Date.now(),channels:chans.slice(0,5000)})}catch(e){}
-  }
-  save();if(ME.m3u.length){toast('Listas de canales cargadas');if(VIEW==='m3u'||VIEW==='home')renderView()}
+  if(!ME)return;ME.m3u=ME.m3u||[];
+  if(!ME.autoLoaded){ME.autoLoaded=2;PUBLIC_LISTS.forEach(p=>{if(!ME.m3u.some(l=>l.preset===p.id))ME.m3u.push({id:'preset-'+p.id,name:p.name,preset:p.id,source:'Canales gratuitos (iptv-org)',updated:Date.now()})});save()}
+  const need=ME.m3u.filter(l=>l.preset&&!PRESET_CH[l.preset]);if(!need.length)return;
+  LISTS_LOADING=true;renderView();
+  await Promise.all(need.map(l=>loadPresetChannels(l.preset).catch(()=>{})));
+  LISTS_LOADING=false;renderView();
 }
 async function fetchPreset(p){try{return await fetchText(p.url)}catch(e){return await fetchText(p.remote)}}
 function m3uFailMsg(url,e){
@@ -646,10 +684,10 @@ function m3uFailMsg(url,e){
 const IN_PREVIEW=/claude\.ai|claudeusercontent|anthropic/.test(location.hostname)||/claude\.ai/.test(document.referrer);
 const onlyCompatible=list=>location.protocol==='https:'?list.filter(c=>/^https:/i.test(c.url)):list;
 async function loadPreset(id){
-  const p=PUBLIC_LISTS.find(x=>x.id===id);const e0=$('#m3u-perr');const err={set textContent(t){e0?e0.textContent=t:toast(t)}};err.textContent='Descargando '+p.name+'…';
-  try{let chans=parseM3U(await fetchPreset(p));const before=chans.length;chans=onlyCompatible(chans);const skipped=before-chans.length;ME.m3u=ME.m3u||[];ME.m3u=ME.m3u.filter(l=>l.url!==p.url);
-    ME.m3u.push({id:uid(),name:p.name+' · iptv-org',url:p.url,source:'iptv-org (índice público)',updated:Date.now(),channels:chans.slice(0,5000)});
-    audit(ME.username,'lista_m3u_agregada',p.name,`${chans.length} canales`);save();closeModal();ST.m3uGroup='all';renderView();toast(`${p.name}: ${chans.length} canales cargados`)}
+  const p=PUBLIC_LISTS.find(x=>x.id===id);const e0=$('#m3u-perr');const err={set textContent(t){e0?e0.textContent=t:toast(t)}};err.textContent='Cargando '+p.name+'…';
+  try{const ch=await loadPresetChannels(id,true);ME.m3u=ME.m3u||[];let l=ME.m3u.find(x=>x.preset===id);
+    if(!l){l={id:'preset-'+id,name:p.name,preset:id,source:'Canales gratuitos (iptv-org)'};ME.m3u.push(l)}l.updated=Date.now();
+    audit(ME.username,'lista_m3u_agregada',p.name,`${ch.length} canales`);save();closeModal();renderView();toast(`${p.name}: ${ch.length} canales`)}
   catch(e){err.textContent='No se pudo cargar la lista. Revisa tu conexión a internet e intenta de nuevo.'}
 }
 async function fetchText(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('El servidor respondió '+r.status);return r.text()}
@@ -736,7 +774,7 @@ function fail(src,why){
   DB.stats.fails[src.id]=(DB.stats.fails[src.id]||0)+1;markHealth(src,'caída');
   $('#psp')?.remove();$('#stage')?.insertAdjacentHTML('beforeend',`<div class="msg"><h3 style="margin-bottom:8px">No se pudo reproducir esta fuente</h3><p class="mute" style="margin:0 0 12px">${esc(why||(/^http:/i.test(src.url||'')&&location.protocol==='https:'?'Este canal usa un enlace http sin seguridad, que el navegador no permite abrir aquí.':'El canal no está transmitiendo en este momento o solo se puede ver desde su país de origen. Prueba otro canal.'))}${IN_PREVIEW?' En la vista previa de Claude los videos externos no cargan; ábrela desde tu sitio.':''}</p><div class="row-btns" style="justify-content:center"><button class="btn primary" data-act="retryPlay">Reintentar</button><button class="btn" data-act="closePlayer">Cerrar</button></div></div>`);
 }
-function markHealth(src,h){if(src.kind!=='channel')return;const c=DB.channels.find(x=>x.id===src.id)||(ME.m3u||[]).flatMap(l=>l.channels).find(x=>x.id===src.id);if(c&&c.type!=='link'){c.health=h;c.checked=Date.now();save()}}
+function markHealth(src,h){if(src.kind!=='channel')return;const c=DB.channels.find(x=>x.id===src.id)||(ME.m3u||[]).flatMap(listChannels).find(x=>x.id===src.id);if(c&&c.type!=='link'){c.health=h;c.checked=Date.now();save()}}
 function closePlayer(){try{P.hls?.destroy()}catch(e){}try{P.dash?.reset()}catch(e){}P.stop&&P.stop();const v=$('#pv');if(v){v.pause();v.removeAttribute('src');v.load()}$('#player-root').innerHTML='';P.hls=P.dash=P.stop=null;if(ME&&VIEW!=='admin')renderView()}
 function drawPattern(cv,label){
   const ctx=cv.getContext('2d');const W=cv.width=1280,H=cv.height=720;let raf;
@@ -768,7 +806,7 @@ function vSettings(){const pr=ME.prefs;
    <div class="field" style="justify-content:flex-end"><button class="btn accent" type="submit">Guardar preferencias</button></div>
   </form>
   <div class="panel"><div class="eyebrow">Control remoto</div><p style="margin:8px 0 0">Usa las flechas para moverte, <b>Enter/OK</b> para elegir y <b>Esc/Atrás</b> para cerrar el reproductor o una ventana.</p></div>
-  <div class="panel"><div class="eyebrow">Acerca de</div><p style="margin:8px 0 0">Global TV Max v${VERSION} · MVP de cliente con datos de demostración guardados en este navegador. Desarrollo: Mr. Escudero · EIEL.</p></div>`}
+  <div class="panel"><div class="eyebrow">Acerca de</div><p style="margin:8px 0 0">Global TV Max v${VERSION} · Los datos se guardan en este navegador. Desarrollo: Mr. Escudero · EIEL.</p></div>`}
 function pwModal(forced){
   openModal(`${mHead(forced?'Crea tu nueva contraseña':'Cambiar contraseña',forced?'Contraseña temporal':'Seguridad')}
    ${forced?'<p class="note">Entraste con una contraseña temporal. Para continuar, crea una contraseña personal.</p>':''}
@@ -924,7 +962,7 @@ function aSettings(){const S=DB.settings;
    <div class="field"><label for="s-temp">Vigencia de contraseña temporal (horas)</label><input id="s-temp" type="number" min="1" max="168" value="${S.tempHours}"></div>
    <div class="field"><label for="s-staff">Dispositivos para personal administrativo</label><input id="s-staff" type="number" min="1" max="20" value="${S.staffDevices}"></div>
    <div class="row-btns" style="grid-column:1/-1"><button class="btn accent" type="submit">Guardar ajustes</button></div></form>
-   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="eyebrow">Datos de demostración</div><p style="margin:0">Restablece la base local a su estado inicial. Se borran usuarios, listas M3U y registros creados en este navegador.</p><div class="row-btns"><button class="btn danger" data-act="resetAsk">Restablecer datos demo</button></div><div id="reset-confirm"></div></div>`}
+   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="eyebrow">Restablecer la app</div><p style="margin:0">Restablece la base local a su estado inicial. Se borran usuarios, listas M3U y registros creados en este navegador.</p><div class="row-btns"><button class="btn danger" data-act="resetAsk">Restablecer todo</button></div><div id="reset-confirm"></div></div>`}
 
 /* ---------- Login ---------- */
 function renderLogin(){
@@ -937,8 +975,7 @@ function renderLogin(){
     <div class="field"><label for="lg-pw">Contraseña</label><input id="lg-pw" type="password" required autocomplete="current-password"></div>
     <div class="err" id="lg-err" role="alert"></div>
     <button class="btn accent" type="submit" style="justify-content:center">Entrar</button>
-    <div class="demo-creds"><div class="eyebrow" style="margin-bottom:6px">Cuentas de demostración</div>
-     Superadministrador: <code>admin</code> / <code>GlobalTV-Demo-2026</code><br>Editor: <code>editor</code> / <code>Editor-Demo-2026</code><br>Usuario (Plan Básico): <code>demo</code> / <code>Demo-2026-tv</code></div>
+
     <small class="mute">¿Olvidaste tu contraseña? Pide al administrador una contraseña temporal.</small>
    </form></div>`;
   setTimeout(()=>$('#lg-user')?.focus(),30);
@@ -957,15 +994,23 @@ document.addEventListener('click',async e=>{
     case 'play':playTitle(id);break;
     case 'channel':playChannel(id);break;
     case 'fav':{const i=ME.favorites.indexOf(id);i>=0?ME.favorites.splice(i,1):ME.favorites.push(id);save();toast(i>=0?'Quitado de favoritos':'Agregado a favoritos');if($('.modal')&&DB.titles.some(t=>t.id===id))titleModal(id);renderView();break}
-    case 'quickCat':{const c=visibleChannels().find(x=>x.cat===el.dataset.cat);ST.liveCountry=c?(['MX','US'].includes(c.country)?c.country:'otros'):'MX';ST.liveCat=el.dataset.cat;go('live');break}
+    case 'quickCat':{ST.liveCountry='ALL';ST.liveCat=el.dataset.cat;go('live');break}
     case 'liveCountry':ST.liveCountry=k;ST.liveCat='all';renderView();break;
     case 'liveCat':ST.liveCat=k;renderView();break;
     case 'genre':ST.movieGenre=k;renderView();break;
     case 'm3uAdd':m3uModal();break;
     case 'm3uPreset':loadPreset(k);break;
     case 'm3uGroup':ST.m3uGroup=k;renderView();break;
-    case 'm3uDel':{const l=ME.m3u.find(x=>x.id===id);ME.m3u=ME.m3u.filter(x=>x.id!==id);ME.favorites=ME.favorites.filter(f=>!l.channels.some(c=>c.id===f));ST.m3uGroup='all';audit(ME.username,'lista_m3u_quitada',l.name);save();renderView();toast('Lista quitada');break}
-    case 'm3uRefresh':{const l=ME.m3u.find(x=>x.id===id);try{const ch=parseM3U(await fetchText(l.url));l.channels=ch.slice(0,5000);l.updated=Date.now();save();renderView();toast(`Lista actualizada: ${ch.length} canales`)}catch(err){toast('No se pudo actualizar: '+err.message)}break}
+    case 'm3uList':ST.m3uList=k;ST.m3uCountry='ALL';ST.m3uCat='all';ST.m3uCC='all';ST.m3uLim=60;renderView();break;
+    case 'br':{const key=el.dataset.key,f=el.dataset.f;
+      if(f==='Go'){const [r,c]=k.split('|');ST.liveCountry=r;ST.liveCat=c;ST.liveCC='all';ST.liveLim=60;go('live');break}
+      if(f==='Country'){ST[key+'Country']=k;ST[key+'CC']='all';ST[key+'Cat']='all'}
+      else if(f==='CC'){ST[key+'CC']=k;ST[key+'Cat']='all'}
+      else if(f==='Cat'){ST[key+'Cat']=k;ST[key+'Lim']=60;window.scrollTo({top:0,behavior:'smooth'})}
+      else if(f==='Lim')ST[key+'Lim']=+k;
+      renderView();break}
+    case 'm3uDel':{const l=ME.m3u.find(x=>x.id===id);ME.m3u=ME.m3u.filter(x=>x.id!==id);if(l.channels)ME.favorites=ME.favorites.filter(f=>!l.channels.some(c=>c.id===f));ST.m3uList='all';audit(ME.username,'lista_m3u_quitada',l.name);save();renderView();toast('Lista quitada');break}
+    case 'm3uRefresh':{const l=ME.m3u.find(x=>x.id===id);if(l.preset){loadPreset(l.preset);break}try{const ch=parseM3U(await fetchText(l.url));l.channels=ch.slice(0,5000);l.updated=Date.now();save();renderView();toast(`Lista actualizada: ${ch.length} canales`)}catch(err){toast('No se pudo actualizar: '+err.message)}break}
     case 'logout':logout();break;
     case 'pwChange':pwModal(false);break;
     case 'myDevDel':ME.devices=ME.devices.filter(d=>d.id!==id);DB.sessions.filter(s=>s.userId===ME.id&&s.deviceId===id).forEach(s=>s.revoked=true);audit(ME.username,'dispositivo_quitado',ME.username,id);save();renderView();toast('Dispositivo quitado');break;
@@ -985,7 +1030,7 @@ document.addEventListener('click',async e=>{
     case 'tEdit':tModal(id);break;
     case 'sesRevoke':{const s=DB.sessions.find(x=>x.id===id);s.revoked=true;s.ended=Date.now();audit(ME.username,'sesion_revocada',DB.users.find(u=>u.id===s.userId)?.username||'',s.deviceName);save();if(s.id===currentSession()?.id){logout('Cerraste tu propia sesión');break}renderView();break}
     case 'resetAsk':$('#reset-confirm').innerHTML='<div class="note">¿Seguro? Esta acción no se puede deshacer. <button class="btn sm danger" data-act="resetDo">Sí, restablecer</button></div>';break;
-    case 'resetDo':LS.del(DB_KEY);LS.del('gtm_session');await seedDB();ME=null;renderApp();toast('Datos de demostración restablecidos');break;
+    case 'resetDo':LS.del(DB_KEY);LS.del('gtm_session');await seedDB();ME=null;renderApp();toast('App restablecida');break;
   }
 });
 document.addEventListener('change',e=>{
@@ -1043,7 +1088,13 @@ document.addEventListener('keydown',e=>{
 (async function boot(){
   try{
     DB=LS.get(DB_KEY,null);
-    if(!DB||DB.version!==1){$('#app').innerHTML='<div class="empty" style="margin:40px">Preparando datos de demostración…</div>';await seedDB()}
+    if(DB&&DB.version===1){
+      DB.channels=DB.channels.filter(c=>!c.demo);
+      DB.users=DB.users.filter(u=>!/\(ejemplo\)/.test(u.name));
+      DB.users.forEach(u=>{u.m3u=(u.m3u||[]).filter(l=>!/iptv-org/.test(l.source)&&!l.preset);u.m3u.forEach(l=>(l.channels||[]).forEach(c=>{if(!CATS[c.cat]){c.cat=catFromGroup(c.group,c.name);c.country=c.country&&c.country!=='INT'?regionOf(c.country.toLowerCase(),'INT'):'INT'}}));u.autoLoaded=false;u.favorites=(u.favorites||[]).filter(f=>!/^ch-(mx|us|la|ca|eu|as)\d|^ch-pattern/.test(f))});
+      DB.version=2;audit('sistema','actualizacion','base','v1.1: canales demo eliminados');save();
+    }
+    if(!DB||DB.version!==2){$('#app').innerHTML='<div class="empty" style="margin:40px">Preparando la app…</div>';await seedDB()}
     ME=checkSession();if(ME)save();
     const h=(location.hash||'').slice(1);if(['home','live','movies','series','m3u','providers','favorites','account','settings','admin'].includes(h))VIEW=h;
     renderApp();if(ME?.mustChange)pwModal(true);autoLoadLists();
