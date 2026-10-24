@@ -501,7 +501,7 @@ function renderApp(){
         <label class="search">${ic('search')}<input id="q" type="text" placeholder="Buscar canales, películas, series…" value="${esc(ST.q)}" aria-label="Búsqueda global" autocomplete="off"></label>
         <button class="avatar" data-act="go" data-v="account" aria-label="Mi cuenta">${esc(initials(ME.name||ME.username))}</button>
       </header>
-      ${IN_PREVIEW?'<div class="note" style="margin:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))"><b>Vista previa:</b> aquí Claude bloquea videos y descargas externas, por eso los canales no reproducen. Solo funciona “GTM Señal de Prueba”. Abre la app desde su sitio publicado para verla completa.</div>':''}
+      ${IN_PREVIEW?'<div class="note" style="margin:12px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))"><b>Vista previa:</b> aquí puedes ver las listas y el diseño, pero Claude no deja reproducir video externo. Para ver los canales abre tu sitio: <b>tribilins.github.io/Global-tv-max</b></div>':''}
       <div class="view" id="view"></div>
     </main>
     <nav class="bottom">${MOBILE_NAV.map(navBtn).join('')}</nav>
@@ -630,7 +630,7 @@ const PUBLIC_LISTS=[
   {id:'spa',name:'Canales en español',url:'listas/spa.m3u',remote:'https://iptv-org.github.io/iptv/languages/spa.m3u'}
 ];
 async function autoLoadLists(){
-  if(!ME||IN_PREVIEW||(ME.m3u&&ME.m3u.length)||ME.autoLoaded)return;
+  if(!ME||(ME.m3u&&ME.m3u.length)||ME.autoLoaded)return;
   ME.autoLoaded=true;save();
   for(const p of PUBLIC_LISTS.filter(x=>x.id==='mx'||x.id==='spa')){
     try{const chans=onlyCompatible(parseM3U(await fetchPreset(p)));if(!chans.length)continue;ME.m3u=ME.m3u||[];
