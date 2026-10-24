@@ -39,7 +39,7 @@ a{color:var(--accent)}
 
 /* Shell */
 .shell{display:grid;grid-template-columns:232px 1fr;min-height:100%}
-.side{position:sticky;top:0;height:100vh;padding:20px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px;background:var(--ink)}
+.side{position:sticky;top:0;height:100vh;height:100dvh;padding:20px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px;background:var(--ink)}
 .logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-family:var(--f-display);font-weight:800;font-size:1.15rem}
 .logo .mark{width:30px;height:30px;border-radius:8px;background:conic-gradient(from 200deg,var(--accent),var(--gold),var(--live),var(--accent));display:grid;place-items:center;color:var(--ink);font-size:.8rem}
 .nav-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--mute);font-weight:600;text-align:left;width:100%}
@@ -165,7 +165,29 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .detail .art{aspect-ratio:2/3;border-radius:12px;display:flex;align-items:flex-end;padding:12px;font-family:var(--f-display);font-weight:800;font-size:1.3rem}
 
 /* Player */
-.player{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column}
+.player{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column;height:100vh;height:100dvh;width:100vw}
+.player .stage{position:relative}
+.player.idle .bar,.player.idle .hud{opacity:0;pointer-events:none}
+.player .pbtns{display:flex;gap:8px;flex:none}
+.player .x svg{width:20px;height:20px}
+.player .castmenu{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px));z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;width:min(320px,calc(100vw - 28px));box-shadow:0 14px 40px #000a}
+.player .castmenu button{display:flex;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:10px;font-weight:600}
+.player .castmenu button:hover{background:var(--panel2)}
+.player .castmenu small{display:block;color:var(--mute);font-weight:400}
+.player .castmenu svg{width:22px;height:22px;flex:none}
+@media (orientation:landscape) and (max-height:520px){
+  .top{position:static;padding-block:8px}
+  .shell .bottom .nav-btn{flex-direction:row;gap:6px;font-size:.78rem;padding:5px 4px;justify-content:center}
+  .shell .bottom .nav-btn svg{width:18px;height:18px}
+  .view h1{font-size:1.4rem!important}
+  .top .avatar{width:32px;height:32px}
+  .search{padding:5px 12px}
+  main{padding-bottom:64px}
+  .view{padding-block:12px;gap:20px}
+  .hero{min-height:170px;padding:16px}
+  .hero p{display:none}
+}
+@media (orientation:landscape) and (max-height:520px){.player .hud{display:none}.player .bar{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}}
 .player .bar{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));background:linear-gradient(#000c,#0000);position:absolute;inset:0 0 auto;z-index:2;transition:opacity .3s}
 .player .bar .ttl{flex:1;min-width:0}
 .player .bar .ttl strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -189,7 +211,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--ink);padding:10px 18px;border-radius:999px;font-weight:700;z-index:100;box-shadow:0 10px 30px #0008;max-width:90vw;text-align:center}
 
-@media (max-width:860px){
+@media (max-width:860px),(max-height:520px){
   .shell{grid-template-columns:1fr}
   .side{display:none}
   .top .mlogo{display:flex;padding:0}
@@ -411,6 +433,8 @@ const I={
   play:'<path d="M7 4l13 8-13 8z" fill="currentColor"/>',
   x:'<path d="M6 6l12 12M18 6L6 18"/>',
   ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>',
+  cast:'<path d="M2 16a5 5 0 015 5M2 12a9 9 0 019 9M2 8a13 13 0 0113 13"/><path d="M4 5V4a1 1 0 011-1h15a1 1 0 011 1v15a1 1 0 01-1 1h-4"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>'
 };
 const ic=(n,fill)=>`<svg viewBox="0 0 24 24" fill="${fill?'currentColor':'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
@@ -742,8 +766,9 @@ function openPlayer(src){
     <div class="bar"><button class="x" data-act="closePlayer" aria-label="Cerrar reproductor">${ic('x')}</button>
      <div class="ttl"><strong>${esc(src.name)}</strong><small class="mute">${esc(src.sub||'')}</small></div>
      ${src.live?'<span class="tag live">En vivo</span>':''}
-     <select id="pq" aria-label="Calidad" hidden><option value="-1">Automática</option></select></div>
-    <div class="stage" id="stage">${src.format==='canvas'?'<canvas id="pc" aria-label="Señal de prueba"></canvas>':'<video id="pv" controls playsinline autoplay></video><div class="spinner" id="psp"></div>'}</div>
+     <select id="pq" aria-label="Calidad" hidden><option value="-1">Automática</option></select>
+     <div class="pbtns"><button class="x" data-act="pCastMenu" aria-label="Enviar a otro dispositivo" title="Enviar a otro dispositivo">${ic('cast')}</button><button class="x" data-act="pFull" aria-label="Pantalla completa" title="Pantalla completa">${ic('expand')}</button></div></div>
+    <div class="stage" id="stage">${src.format==='canvas'?'<canvas id="pc" aria-label="Señal de prueba"></canvas>':'<video id="pv" controls playsinline autoplay x-webkit-airplay="allow"></video><div class="spinner" id="psp"></div>'}</div>
     <div class="hud" id="hud">Conectando…</div></div>`;
   if(src.format==='canvas'){P.stop=drawPattern($('#pc'),src.name);$('#hud').textContent='Señal generada · 1280×720';markHealth(src,'en línea');return}
   const v=$('#pv');
@@ -756,10 +781,47 @@ function openPlayer(src){
     v.addEventListener('timeupdate',()=>{if(Date.now()-P.saveT<5000||!v.duration)return;P.saveT=Date.now();ME.history[src.id]={pos:v.currentTime,dur:v.duration,t:Date.now()};save()});
   }
   attach(v,src);
+  playerIdle();
+}
+function playerIdle(){const p=$('.player');if(!p)return;const wake=()=>{p.classList.remove('idle');clearTimeout(P.idleT);P.idleT=setTimeout(()=>{if(!p.querySelector('.castmenu')&&!p.querySelector('.msg'))p.classList.add('idle')},3500)};['pointerdown','pointermove','keydown','touchstart'].forEach(ev=>p.addEventListener(ev,wake,{passive:true}));wake()}
+function isFs(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+async function pFull(){
+  const p=$('.player'),v=$('#pv');
+  if(isFs()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  const req=p.requestFullscreen||p.webkitRequestFullscreen;
+  if(req&&document.fullscreenEnabled!==false){try{await req.call(p);try{await screen.orientation.lock('landscape')}catch(e){}return}catch(e){}}
+  if(v&&v.webkitEnterFullscreen){try{v.webkitEnterFullscreen();return}catch(e){}}
+  toast('Gira el teléfono: el video se ajusta a toda la pantalla');
+}
+function castMenu(){
+  const p=$('.player');const old=p.querySelector('.castmenu');if(old){old.remove();return}
+  const v=$('#pv');const airplay=!!(v&&v.webkitShowPlaybackTargetPicker);const chrome=/Chrome|CriOS|Android/.test(navigator.userAgent)&&!/CriOS/.test(navigator.userAgent);
+  p.insertAdjacentHTML('beforeend',`<div class="castmenu" role="menu">
+    ${airplay?`<button data-act="pAirplay">${ic('cast')}<span>AirPlay<small>Apple TV o pantalla compatible con AirPlay</small></span></button>`:''}
+    ${chrome?`<button data-act="pChromecast">${ic('cast')}<span>Chromecast<small>TV con Chromecast o Google TV</small></span></button>`:''}
+    <button data-act="pShare">${ic('ext')}<span>Enviar enlace del canal<small>Ábrelo en otro dispositivo o en VLC</small></span></button>
+    <button data-act="pShareApp">${ic('live')}<span>Abrir la app en la TV<small>Enviar la dirección de Global TV Max</small></span></button>
+  </div>`);
+}
+function pAirplay(){const v=$('#pv');try{v.webkitShowPlaybackTargetPicker()}catch(e){toast('AirPlay no está disponible en este dispositivo')}$('.castmenu')?.remove()}
+async function shareOrCopy(title,url){$('.castmenu')?.remove();if(navigator.share){try{await navigator.share({title,url});return}catch(e){if(e.name==='AbortError')return}}copyText(url)}
+const CAST_SDK='https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
+function castReady(){return new Promise((ok,ko)=>{if(window.cast&&cast.framework)return ok();window.__onGCastApiAvailable=a=>a?ok():ko(new Error('no'));loadScript(CAST_SDK).catch(ko);setTimeout(()=>ko(new Error('tiempo')),8000)})}
+async function pChromecast(){
+  $('.castmenu')?.remove();const src=P.src;if(!src?.url){toast('Este contenido no se puede enviar');return}
+  try{await castReady();const ctx=cast.framework.CastContext.getInstance();
+    ctx.setOptions({receiverApplicationId:chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,autoJoinPolicy:chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED});
+    await ctx.requestSession();const ses=ctx.getCurrentSession();
+    const mi=new chrome.cast.media.MediaInfo(src.url,src.format==='dash'?'application/dash+xml':'application/x-mpegURL');
+    mi.streamType=src.live?chrome.cast.media.StreamType.LIVE:chrome.cast.media.StreamType.BUFFERED;mi.metadata=new chrome.cast.media.GenericMediaMetadata();mi.metadata.title=src.name;
+    await ses.loadMedia(new chrome.cast.media.LoadRequest(mi));$('#pv')?.pause();toast('Reproduciendo en '+(ses.getCastDevice()?.friendlyName||'tu TV'));
+  }catch(e){if(e&&e.code==='cancel')return;toast('No se pudo enviar a Chromecast. Algunos canales no permiten reproducirse en otro equipo.')}
 }
 function updHud(v,ms){const h=$('#hud');if(!h)return;if(ms!==undefined)P.startMs=ms;h.textContent=`${v.videoWidth?v.videoWidth+'×'+v.videoHeight:'—'} · inicio ${P.startMs!=null?(P.startMs/1000).toFixed(1)+' s':'—'} · ${P.src.format.toUpperCase()}`}
 function attach(v,src){
   if(src.format==='dash'){loadScript(DASH_LIB).then(()=>{P.dash=dashjs.MediaPlayer().create();P.dash.initialize(v,src.url,true);P.dash.on('error',()=>fail(src))}).catch(()=>fail(src,'No se pudo cargar el módulo DASH.'));return}
+  const safari=/^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent)||/iPhone|iPad/.test(navigator.userAgent);
+  if(safari&&v.canPlayType('application/vnd.apple.mpegurl')){v.src=src.url;v.onerror=()=>fail(src);v.play().catch(()=>{});return}
   if(window.Hls&&Hls.isSupported()){
     const h=P.hls=new Hls({maxBufferLength:30,enableWorker:true});h.loadSource(src.url);h.attachMedia(v);
     h.on(Hls.Events.MANIFEST_PARSED,(e,d)=>{const q=$('#pq');if(q&&d.levels.length>1){q.hidden=false;q.innerHTML='<option value="-1">Automática</option>'+d.levels.map((l,i)=>`<option value="${i}">${l.height?l.height+'p':Math.round(l.bitrate/1000)+' kbps'}</option>`).join('')}v.play().catch(()=>{})});
@@ -775,7 +837,7 @@ function fail(src,why){
   $('#psp')?.remove();$('#stage')?.insertAdjacentHTML('beforeend',`<div class="msg"><h3 style="margin-bottom:8px">No se pudo reproducir esta fuente</h3><p class="mute" style="margin:0 0 12px">${esc(why||(/^http:/i.test(src.url||'')&&location.protocol==='https:'?'Este canal usa un enlace http sin seguridad, que el navegador no permite abrir aquí.':'El canal no está transmitiendo en este momento o solo se puede ver desde su país de origen. Prueba otro canal.'))}${IN_PREVIEW?' En la vista previa de Claude los videos externos no cargan; ábrela desde tu sitio.':''}</p><div class="row-btns" style="justify-content:center"><button class="btn primary" data-act="retryPlay">Reintentar</button><button class="btn" data-act="closePlayer">Cerrar</button></div></div>`);
 }
 function markHealth(src,h){if(src.kind!=='channel')return;const c=DB.channels.find(x=>x.id===src.id)||(ME.m3u||[]).flatMap(listChannels).find(x=>x.id===src.id);if(c&&c.type!=='link'){c.health=h;c.checked=Date.now();save()}}
-function closePlayer(){try{P.hls?.destroy()}catch(e){}try{P.dash?.reset()}catch(e){}P.stop&&P.stop();const v=$('#pv');if(v){v.pause();v.removeAttribute('src');v.load()}$('#player-root').innerHTML='';P.hls=P.dash=P.stop=null;if(ME&&VIEW!=='admin')renderView()}
+function closePlayer(){clearTimeout(P.idleT);if(isFs()){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}try{screen.orientation.unlock()}catch(e){}try{P.hls?.destroy()}catch(e){}try{P.dash?.reset()}catch(e){}P.stop&&P.stop();const v=$('#pv');if(v){v.pause();v.removeAttribute('src');v.load()}$('#player-root').innerHTML='';P.hls=P.dash=P.stop=null;if(ME&&VIEW!=='admin')renderView()}
 function drawPattern(cv,label){
   const ctx=cv.getContext('2d');const W=cv.width=1280,H=cv.height=720;let raf;
   const top=['#c0c0c0','#c0c000','#00c0c0','#00c000','#c000c0','#c00000','#0000c0'],mid=['#0000c0','#131313','#c000c0','#131313','#00c0c0','#131313','#c0c0c0'];
@@ -989,6 +1051,12 @@ document.addEventListener('click',async e=>{
     case 'go':go(el.dataset.v);break;
     case 'closeModal':closeModal();break;
     case 'closePlayer':closePlayer();break;
+    case 'pFull':pFull();break;
+    case 'pCastMenu':castMenu();break;
+    case 'pAirplay':pAirplay();break;
+    case 'pChromecast':pChromecast();break;
+    case 'pShare':shareOrCopy(P.src?.name||'Canal',P.src?.url||location.href);break;
+    case 'pShareApp':shareOrCopy('Global TV Max',location.origin+location.pathname);break;
     case 'retryPlay':{const s=P.src;closePlayer();openPlayer(s);break}
     case 'title':titleModal(id);break;
     case 'play':playTitle(id);break;
