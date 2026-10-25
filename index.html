@@ -67,7 +67,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
 /* Buttons & chips */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
+.btn{text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
 .btn:hover{border-color:var(--mute)}
 .btn.primary{background:var(--fg);color:var(--ink);border-color:var(--fg)}
 .btn.accent{background:var(--accent);color:var(--ink);border-color:var(--accent)}
@@ -75,6 +75,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .btn.sm{padding:6px 12px;font-size:.85rem}
 .btn svg{width:18px;height:18px}
 .row-btns{display:flex;gap:10px;flex-wrap:wrap}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pl-row{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:12px;border-radius:12px;background:var(--ink);border:1px solid var(--line)}
+.pl-row .ch-logo{width:42px;height:42px;font-size:.85rem}
+.pl-row .btn{grid-column:1/-1;justify-content:center}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .chip{white-space:nowrap;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--mute);font-weight:600;font-size:.88rem}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--ink);border-color:var(--fg)}
@@ -597,6 +601,23 @@ const SERIES_SHELVES=[
 const shelfCats=new Set(['peliculas','entretenimiento','series','infantil','otros','abierta']);
 function shelfChannels(shelf){const [, ,re,extra,req]=shelf;return sortCh(allChannels().filter(c=>shelfCats.has(c.cat)&&(re.test(c.name)||(extra&&extra(c)))&&(!req||req(c))))
   .sort((a,b)=>(/^(MX|LATAM|EU)$/.test(a.country)||/latam|espa/i.test(a.name)?0:1)-(/^(MX|LATAM|EU)$/.test(b.country)||/latam|espa/i.test(b.name)?0:1))}
+const MS_SUGGEST=['Antonio Aguilar','Pedro Infante','Vicente Fernández','Cantinflas','Tin Tan','Capulina','María Félix','Los Almada','Jorge Negrete','La India María'];
+function movieSearchHtml(type){
+  const q=ST.msq||'';const e=encodeURIComponent(q);
+  const plat=[
+    ['JustWatch México','Muestra en qué plataforma está y si es gratis, renta o suscripción',`https://www.justwatch.com/mx/buscar?q=${e}`,'Ver dónde está'],
+    ['Tubi','Gratis con anuncios',`https://tubitv.com/search/${e}`,'Buscar en Tubi'],
+    ['ViX','Gratis con anuncios · escribe el nombre en su buscador','https://vix.com','Abrir ViX'],
+    ['Pluto TV','Gratis con anuncios · sección "A la carta"','https://pluto.tv','Abrir Pluto TV']];
+  const live=q?sortCh(allChannels().filter(c=>shelfCats.has(c.cat)&&/cine|movie|pel[ií]cula|mexican|clasic/i.test(c.name)&&(/mexican|nuestro cine|cine en espa|latina|az cinema|tvoro|clasic/i.test(c.name)))).slice(0,8):[];
+  return `<div class="panel" style="display:flex;flex-direction:column;gap:12px">
+    <div><div class="eyebrow">Buscar ${type==='movie'?'una película':'una serie o novela'}</div><p class="mute" style="margin:4px 0 0">Escribe el título o el actor y te llevo a las plataformas gratuitas donde puedes verla.</p></div>
+    <form data-form="movieSearch" class="toolbar" style="flex-wrap:nowrap"><input id="ms-q" type="text" placeholder="Ej. Antonio Aguilar, El Santo, Nosotros los pobres" value="${esc(q)}" autocomplete="off" style="flex:1"><button class="btn accent" type="submit">Buscar</button></form>
+    <div class="chips">${MS_SUGGEST.map(n=>`<button class="chip" data-act="msq" data-k="${esc(n)}" aria-pressed="${q===n}">${esc(n)}</button>`).join('')}</div>
+    ${q?`<div class="pl-grid">${plat.map(([n,d,u,b])=>`<div class="pl-row"><div class="ch-logo" style="background:${chColor(n)}">${esc(initials(n))}</div><div style="min-width:0"><strong>${esc(n)}</strong><div class="mute" style="font-size:.84rem">${esc(d)}</div></div><a class="btn sm" href="${u}" target="_blank" rel="noopener">${b}${u.includes(e)&&e?` “${esc(q)}”`:''} ${ic('ext')}</a></div>`).join('')}</div>
+      ${live.length?`<div><div class="eyebrow" style="margin:6px 0 8px">O míralas ahora en canales de cine mexicano en vivo</div><div class="rail wide">${live.map(channelTile).join('')}</div></div>`:''}`:''}
+  </div>`;
+}
 function shelvesHtml(list){
   const filled=list.map(sh=>[sh,shelfChannels(sh)]).filter(([,l])=>l.length);
   if(!filled.length)return LISTS_LOADING?'<div class="empty">Cargando canales de cine…</div>':'';
@@ -609,6 +630,7 @@ function vCatalog(type){
   const genres=[...new Set(list.flatMap(t=>t.genres))].sort();
   if(ST.movieGenre!=='all')list=list.filter(t=>t.genres.includes(ST.movieGenre));
   return `<div><div class="eyebrow">Canales de cine en vivo, gratis las 24 horas</div><h1 style="font-size:1.9rem">${type==='movie'?'Películas':'Series y novelas'}</h1></div>
+   ${movieSearchHtml(type)}
    ${shelvesHtml(type==='movie'?MOVIE_SHELVES:SERIES_SHELVES)}
    ${section(type==='movie'?'Películas a la carta, gratis':'Series a la carta, gratis',`<div class="grid ch">${[['ViX','https://vix.com','Cine mexicano y latino gratis con anuncios'],['Pluto TV','https://pluto.tv','Películas a la carta gratis con anuncios'],['Tubi','https://tubitv.com','Miles de películas gratis con anuncios']].map(([n,u,d])=>`<div class="ch-tile" style="grid-template-columns:auto 1fr auto"><div class="ch-logo" style="background:${chColor(n)}">${esc(initials(n))}</div><div class="info"><strong>${n}</strong><div class="now">${d}</div></div><a class="btn sm" href="${u}" target="_blank" rel="noopener">Abrir ${ic('ext')}</a></div>`).join('')}</div>`)}
    ${section('Animación libre a la carta (Creative Commons)',`<div class="chips" style="margin-bottom:12px"><button class="chip" data-act="genre" data-k="all" aria-pressed="${ST.movieGenre==='all'}">Todos</button>${genres.map(g=>`<button class="chip" data-act="genre" data-k="${esc(g)}" aria-pressed="${ST.movieGenre===g}">${esc(g)}</button>`).join('')}</div>
@@ -1076,6 +1098,7 @@ document.addEventListener('click',async e=>{
     case 'go':go(el.dataset.v);break;
     case 'closeModal':closeModal();break;
     case 'closePlayer':closePlayer();break;
+    case 'msq':ST.msq=k;renderView();break;
     case 'jump':document.getElementById(k)?.scrollIntoView({behavior:'smooth',block:'start'});break;
     case 'shelfAll':ST.shelfOpen=ST.shelfOpen===k?null:k;renderView();setTimeout(()=>document.getElementById('sh-'+k)?.scrollIntoView({block:'start'}),30);break;
     case 'pFull':pFull();break;
@@ -1149,6 +1172,7 @@ document.addEventListener('submit',async e=>{
     const n=$('#pw-new').value;if(!pwPolicy(n)){err.textContent='Usa mínimo 10 caracteres, con letras y números.';return}if(n!==$('#pw-new2').value){err.textContent='Las contraseñas no coinciden.';return}
     ME.hash=await hashPw(n);ME.mustChange=false;ME.tempExpires=0;audit(ME.username,'contrasena_cambiada',ME.username);save();closeModal();toast('Contraseña actualizada');return}
   if(kind==='m3u'){submitM3U();return}
+  if(kind==='movieSearch'){ST.msq=$('#ms-q').value.trim();renderView();setTimeout(()=>$('#ms-q')?.blur(),10);return}
   if(kind==='prefs'){ME.prefs={...ME.prefs,maxRating:$('#pf-rating').value,autoplay:$('#pf-auto').value==='1'};save();toast('Preferencias guardadas');return}
   if(kind==='user'){saveUser(f);return}
   if(kind==='plan'){if(!can('plans.manage'))return;const id=f.dataset.id;const cats=[...f.querySelectorAll('[name=pl-cat]:checked')].map(x=>x.value);
